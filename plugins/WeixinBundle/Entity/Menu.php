@@ -29,8 +29,8 @@ use Symfony\Component\Validator\Mapping\ClassMetadata;
 class Menu
 {
 
-    const MENU_TYPE_URL = 'url';
-    const MENU_TYPE_MESSAGE = 'message';
+    const MENU_TYPE_URL = 'view';
+    const MENU_TYPE_MESSAGE = 'click';
 
     static $types = [
         self::MENU_TYPE_URL => 'weixin.menu.type.url',

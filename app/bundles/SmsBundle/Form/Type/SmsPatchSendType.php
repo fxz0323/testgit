@@ -47,6 +47,7 @@ class SmsPatchSendType extends AbstractType
                             ['message' => 'mautic.company.choosecompany.notblank']
                         ),
                     ],
+                    'static_only' => false,
                 ]
             )
         );

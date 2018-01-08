@@ -434,6 +434,19 @@ class AjaxController extends CommonAjaxController
         return $this->sendJsonResponse($dataArray);
     }
 
+    protected function getOrderImportProgressAction(Request $request)
+    {
+        $dataArray = ['success' => 1];
+
+        if ($this->get('mautic.security')->isGranted('lead:leads:create')) {
+            $session               = $this->get('session');
+            $dataArray['progress'] = $session->get('mautic.lead.import.progress', [0, 0]);
+            $dataArray['percent']  = ($dataArray['progress'][1]) ? ceil(($dataArray['progress'][0] / $dataArray['progress'][1]) * 100) : 100;
+        }
+
+        return $this->sendJsonResponse($dataArray);
+    }
+
     /**
      * @param Request $request
      *

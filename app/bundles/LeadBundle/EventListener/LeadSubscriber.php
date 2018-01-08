@@ -19,6 +19,8 @@ use Mautic\LeadBundle\Entity\DoNotContact;
 use Mautic\LeadBundle\Event as Events;
 use Mautic\LeadBundle\LeadEvents;
 use Mautic\LeadBundle\Model\ChannelTimelineInterface;
+use Symfony\Component\HttpKernel\Event\PostResponseEvent;
+use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
  * Class LeadSubscriber.
@@ -37,16 +39,19 @@ class LeadSubscriber extends CommonSubscriber
      */
     protected $ipLookupHelper;
 
+    private $listModel;
+
     /**
      * LeadSubscriber constructor.
      *
      * @param IpLookupHelper $ipLookupHelper
      * @param AuditLogModel  $auditLogModel
      */
-    public function __construct(IpLookupHelper $ipLookupHelper, AuditLogModel $auditLogModel)
+    public function __construct(IpLookupHelper $ipLookupHelper, AuditLogModel $auditLogModel, $listModel)
     {
         $this->ipLookupHelper = $ipLookupHelper;
         $this->auditLogModel  = $auditLogModel;
+        $this->listModel = $listModel;
     }
 
     /**
@@ -63,6 +68,7 @@ class LeadSubscriber extends CommonSubscriber
             LeadEvents::NOTE_POST_SAVE       => ['onNotePostSave', 0],
             LeadEvents::NOTE_POST_DELETE     => ['onNoteDelete', 0],
             LeadEvents::TIMELINE_ON_GENERATE => ['onTimelineGenerate', 0],
+            KernelEvents::TERMINATE => 'onTerminate'
         ];
     }
 
@@ -576,6 +582,23 @@ class LeadSubscriber extends CommonSubscriber
                         'icon'            => $icon,
                     ]
                 );
+            }
+        }
+    }
+
+
+    public function onTerminate(PostResponseEvent $event)
+    {
+        $route = $event->getRequest()->get('_route');
+        if (in_array($route, ['mautic_segment_action'])) {
+            $action = $event->getRequest()->get('_route_params')['objectAction'];
+            if(in_array($action, ['new', 'edit'])) {
+                ini_set('max_execution_time', -1);
+                $id = $action = $event->getRequest()->get('_route_params')['objectId'];
+                $list = $this->listModel->getEntity($id);
+                if($list){
+                    $this->listModel->rebuildListLeads($list);
+                }
             }
         }
     }

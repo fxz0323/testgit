@@ -121,6 +121,10 @@ class Page extends FormEntity implements TranslationEntityInterface, VariantEnti
      */
     private $sessionId;
 
+    private $submits = 0;
+
+    private $uniqueSubmits = 0;
+
     public function __clone()
     {
         $this->id = null;
@@ -199,6 +203,12 @@ class Page extends FormEntity implements TranslationEntityInterface, VariantEnti
             ->build();
 
         $builder->addCategory();
+
+        $builder->addField('submits', 'integer');
+
+        $builder->createField('uniqueSubmits', 'integer')
+            ->columnName('unique_submits')
+            ->build();
 
         self::addTranslationMetadata($builder, self::class);
         self::addVariantMetadata($builder, self::class);
@@ -709,4 +719,38 @@ class Page extends FormEntity implements TranslationEntityInterface, VariantEnti
     {
         $this->customHtml = $customHtml;
     }
+
+    /**
+     * @return int
+     */
+    public function getSubmits()
+    {
+        return $this->submits;
+    }
+
+    /**
+     * @param int $submits
+     */
+    public function setSubmits($submits)
+    {
+        $this->submits = $submits;
+    }
+
+    /**
+     * @return int
+     */
+    public function getUniqueSubmits()
+    {
+        return $this->uniqueSubmits;
+    }
+
+    /**
+     * @param int $uniqueSubmits
+     */
+    public function setUniqueSubmits($uniqueSubmits)
+    {
+        $this->uniqueSubmits = $uniqueSubmits;
+    }
+
+
 }

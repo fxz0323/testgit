@@ -29,12 +29,12 @@ class EmayApi extends AbstractSmsApi
     protected $keys;
 
 
-    /**
+    /**亿美软通接口 构造函数
      * EmayApi constructor.
-     * @param TrackableModel $pageTrackableModel
-     * @param PhoneNumberHelper $phoneNumberHelper
-     * @param IntegrationHelper $integrationHelper
-     * @param Logger $logger
+     * @param TrackableModel $pageTrackableModel 追踪模型
+     * @param PhoneNumberHelper $phoneNumberHelper 电话号码助手
+     * @param IntegrationHelper $integrationHelper 积分助手
+     * @param Logger $logger 记录
      */
     public function __construct(TrackableModel $pageTrackableModel, PhoneNumberHelper $phoneNumberHelper,IntegrationHelper $integrationHelper,Logger $logger)
     {
@@ -52,6 +52,7 @@ class EmayApi extends AbstractSmsApi
                 'password' => $keys['password'],
                 'sessionKey' => $keys['password'],
             ];
+//            加载亿美通的配置信息
             $this->client = \Chxj1992\YimeiSms\App\ClientFactory::instance($config);
         }
 
@@ -66,7 +67,9 @@ class EmayApi extends AbstractSmsApi
     {
         return $number;
     }
-
+    /*发送信息
+     *
+     * */
     public function sendSms($number, $content, $type = 1)
     {
         if ($type == 2) {
@@ -91,7 +94,10 @@ class EmayApi extends AbstractSmsApi
         else
             return $ret;
     }
-
+    /*
+     * 得到上行短信状态报告  (注:此方法必须为已登录状态下方可操作)
+     *
+     * */
     public function getMo()
     {
         $moResult = $this->client->getMO();

@@ -80,6 +80,7 @@ class LeadApiController extends CommonApiController
     protected function getExistingLeads()
     {
         // Check for an email to see if the lead already exists
+        //检查电子邮件，查看潜在客户是否已经存在
         $parameters          = $this->request->request->all();
         $uniqueLeadFields    = $this->getModel('lead.field')->getUniqueIdentiferFields();
         $uniqueLeadFieldData = [];
@@ -101,7 +102,7 @@ class LeadApiController extends CommonApiController
 
     /**
      * Obtains a list of users for lead owner edits.
-     *
+     *获取潜在客户所有者编辑的用户列表。
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function getOwnersAction()

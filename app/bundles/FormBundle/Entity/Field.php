@@ -111,6 +111,8 @@ class Field
      */
     private $leadField;
 
+    private $userField;
+
     /**
      * @var bool
      */
@@ -224,6 +226,9 @@ class Field
 
         $builder->addNullableField('leadField', 'string', 'lead_field');
 
+        //user field in form, like leadField in Mautic
+        $builder->addNullableField('userField', 'string', 'user_field');
+
         $builder->addNullableField('saveResult', 'boolean', 'save_result');
 
         $builder->addNullableField('isAutoFill', 'boolean', 'is_auto_fill');
@@ -258,6 +263,7 @@ class Field
                     'inputAttributes',
                     'containerAttributes',
                     'leadField',
+                    'userField',
                     'saveResult',
                     'isAutoFill',
                 ]
@@ -754,6 +760,22 @@ class Field
     public function setLeadField($leadField)
     {
         $this->leadField = $leadField;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getUserField()
+    {
+        return $this->userField;
+    }
+
+    /**
+     * @param mixed $userField
+     */
+    public function setUserField($userField)
+    {
+        $this->userField = $userField;
     }
 
     /**

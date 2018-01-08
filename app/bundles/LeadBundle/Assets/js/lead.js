@@ -346,7 +346,7 @@ Mautic.addLeadListFilter = function (elId) {
     var prototype = mQuery('.available-filters').data('prototype');
     var fieldType = mQuery(filterId).data('field-type');
     var fieldObject = mQuery(filterId).data('field-object');
-    var isSpecial = (mQuery.inArray(fieldType, ['leadlist', 'lead_email_received', 'lead_email_sent', 'tags', 'multiselect', 'boolean', 'select', 'country', 'timezone', 'region', 'stage', 'locale', 'globalcategory']) != -1);
+    var isSpecial = (mQuery.inArray(fieldType, ['leadlist', 'lead_email_received', 'lead_email_sent', 'tags', 'multiselect', 'boolean', 'select', 'country', 'timezone', 'region', 'stage', 'locale', 'globalcategory', 'weixin', 'sms', 'page', 'forms']) != -1);
 
     prototype = prototype.replace(/__name__/g, filterNum);
     prototype = prototype.replace(/__label__/g, label);
@@ -877,6 +877,47 @@ Mautic.showSocialMediaImageModal = function(imgSrc) {
     mQuery('#socialImageModal img').attr('src', imgSrc);
     mQuery('#socialImageModal').modal('show');
 };
+
+Mautic.orderImportOnLoad = function (container, response) {
+    if (!mQuery('#orderImportProgress').length) {
+        Mautic.clearModeratedInterval('orderImportProgress');
+    } else {
+        Mautic.setModeratedInterval('orderImportProgress', 'reloadOrderImportProgress', 3000);
+    }
+};
+
+Mautic.reloadOrderImportProgress = function() {
+    if (!mQuery('#orderImportProgress').length) {
+        Mautic.clearModeratedInterval('orderImportProgress');
+    } else {
+        // Get progress separate so there's no delay while the import batches
+        Mautic.ajaxActionRequest('lead:getOrderImportProgress', {}, function(response) {
+            if (response.progress) {
+                if (response.progress[0] > 0) {
+                    mQuery('.imported-count').html(response.progress[0]);
+                    mQuery('.progress-bar-import').attr('aria-valuenow', response.progress[0]).css('width', response.percent + '%');
+                    mQuery('.progress-bar-import span.sr-only').html(response.percent + '%');
+                }
+            }
+        });
+
+        // Initiate import
+        mQuery.ajax({
+            showLoadingBar: false,
+            url: window.location + '?importbatch=1',
+            success: function(response) {
+                Mautic.moderatedIntervalCallbackIsComplete('orderImportProgress');
+
+                if (response.newContent) {
+                    // It's done so pass to process page
+                    Mautic.processPageContent(response);
+                }
+            }
+        });
+    }
+};
+
+
 
 Mautic.leadImportOnLoad = function (container, response) {
     if (!mQuery('#leadImportProgress').length) {

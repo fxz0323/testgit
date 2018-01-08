@@ -120,10 +120,23 @@ class PluginController extends FormController
             }
         }
 
+        $domesticIntegrations = [];
+        $exoticIntegrations = [];
+        $filter = ['CRM', 'Email', 'OMS', 'Emay', 'Weixin', 'Youzan'];
+        foreach ($integrations as $key => $integration) {
+            if(in_array($key, $filter)){
+                $domesticIntegrations[] = $integration;
+            }else {
+                $exoticIntegrations[] = $integration;
+            }
+        }
+
         return $this->delegateView(
             [
                 'viewParameters' => [
-                    'items'        => $integrations,
+                    'domesticIntegrations'        => $domesticIntegrations,
+                    'exoticIntegrations'        => $exoticIntegrations,
+                    'items' => $integrations,
                     'tmpl'         => $tmpl,
                     'pluginFilter' => ($pluginFilter) ? ['id' => $pluginId, 'name' => $pluginName] : false,
                     'plugins'      => $plugins,

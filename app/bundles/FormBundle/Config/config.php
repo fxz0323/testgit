@@ -305,6 +305,7 @@ return [
                     'mautic.lead.model.field',
                     'mautic.lead.model.company',
                     'mautic.helper.form.field_helper',
+                    'security.encoder_factory'
                 ],
             ],
         ],

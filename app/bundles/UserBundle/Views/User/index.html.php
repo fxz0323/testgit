@@ -21,7 +21,8 @@ $view['slots']->set(
                 'new' => $permissions['create'],
             ],
             'routeBase' => 'user',
-            'langVar'   => 'user.user',
+            'langVar' => 'user.user',
+            'extraHtml' => '<a class="btn btn-default" href="'.$view['router']->path('mautic_user_applicants').'"><span>申请信息列表</span></a><a class="btn btn-default" href="' . $view['router']->path('mautic_user_add_field') . '">新建字段</a>',
         ]
     )
 );
@@ -31,8 +32,8 @@ $view['slots']->set(
     'MauticCoreBundle:Helper:list_toolbar.html.php',
     [
         'searchValue' => $searchValue,
-        'searchHelp'  => 'mautic.user.user.help.searchcommands',
-        'action'      => $currentRoute,
+        'searchHelp' => 'mautic.user.user.help.searchcommands',
+        'action' => $currentRoute,
     ]
 ); ?>
 

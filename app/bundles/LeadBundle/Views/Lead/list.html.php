@@ -89,17 +89,18 @@ if ($permissions['lead:leads:editown'] || $permissions['lead:leads:editother']) 
 
                 echo $view->render('MauticCoreBundle:Helper:tableheader.html.php', [
                     'sessionVar' => 'lead',
-                    'orderBy'    => 'l.email',
-                    'text'       => 'mautic.core.type.email',
+                    'orderBy'    => 'l.mobile',
+                    'text'       => 'mautic.lead.mobile',
                     'class'      => 'col-lead-email visible-md visible-lg',
                 ]);
 
                 echo $view->render('MauticCoreBundle:Helper:tableheader.html.php', [
                     'sessionVar' => 'lead',
-                    'orderBy'    => 'l.city, l.state',
-                    'text'       => 'mautic.lead.lead.thead.location',
-                    'class'      => 'col-lead-location visible-md visible-lg',
+                    'orderBy'    => 'l.email',
+                    'text'       => 'mautic.core.type.email',
+                    'class'      => 'col-lead-email visible-md visible-lg',
                 ]);
+
                 echo $view->render('MauticCoreBundle:Helper:tableheader.html.php', [
                     'sessionVar' => 'lead',
                     'orderBy'    => 'l.stage_id',
@@ -115,8 +116,8 @@ if ($permissions['lead:leads:editown'] || $permissions['lead:leads:editother']) 
 
                 echo $view->render('MauticCoreBundle:Helper:tableheader.html.php', [
                     'sessionVar' => 'lead',
-                    'orderBy'    => 'l.last_active',
-                    'text'       => 'mautic.lead.lastactive',
+                    'orderBy'    => 'l.vip',
+                    'text'       => 'mautic.lead.vip',
                     'class'      => 'col-lead-lastactive visible-md visible-lg',
                     'default'    => true,
                 ]);

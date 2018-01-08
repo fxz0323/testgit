@@ -269,7 +269,13 @@ class FieldController extends FormController
         }
 
         $action = $this->generateUrl('mautic_contactfield_action', ['objectAction' => 'edit', 'objectId' => $objectId]);
-        $form   = $model->createForm($field, $this->get('form.factory'), $action);
+        $form   = $model->createForm($field, $this->get('form.factory'), $action, [
+            'object_choices' => [
+                'mautic.lead.contact'    => 'lead',
+                'mautic.company.company' => 'company',
+                'mautic.lead.user' => 'user',
+            ]
+        ]);
 
         ///Check for a submitted form and process it
         if (!$ignorePost && $this->request->getMethod() == 'POST') {

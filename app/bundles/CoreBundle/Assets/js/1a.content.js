@@ -113,10 +113,10 @@ Mautic.generatePageTitle = function(route){
         // Encoded entites are decoded by this process and can cause a XSS
         currentModuleItem = mQuery('<div>'+currentModuleItem+'</div>').text();
 
-        mQuery('title').html( currentModule[0].toUpperCase() + currentModule.slice(1) + ' | ' + currentModuleItem + ' | Mautic' );
+        mQuery('title').html( currentModule[0].toUpperCase() + currentModule.slice(1) + ' | ' + currentModuleItem + ' | Linkall' );
     } else {
         //loading basic title
-        mQuery('title').html( mQuery('.page-header h3').html() + ' | Mautic' );
+        mQuery('title').html( mQuery('.page-header h3').html() + ' | Linkall' );
     }
 };
 
@@ -164,7 +164,7 @@ Mautic.processPageContent = function (response) {
         if (response.route) {
             //update URL in address bar
             MauticVars.manualStateChange = false;
-            History.pushState(null, "Mautic", response.route);
+            History.pushState(null, "Linkall", response.route);
 
             //update Title
             Mautic.generatePageTitle( response.route );

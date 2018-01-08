@@ -164,7 +164,7 @@ abstract class AbstractCommonModel
 
     /**
      * Retrieve the repository for an entity.
-     *
+     *检索实体的储存库
      * @return \Mautic\CoreBundle\Entity\CommonRepository|bool
      */
     public function getRepository()
@@ -180,7 +180,7 @@ abstract class AbstractCommonModel
 
     /**
      * Retrieve the permissions base.
-     *
+     * 检索权限库
      * @return string
      */
     public function getPermissionBase()
@@ -190,7 +190,7 @@ abstract class AbstractCommonModel
 
     /**
      * Return a list of entities.
-     *
+     *返回实体列表
      * @param array $args [start, limit, filter, orderBy, orderByDir]
      *
      * @return \Doctrine\ORM\Tools\Pagination\Paginator|array
@@ -212,7 +212,7 @@ abstract class AbstractCommonModel
 
     /**
      * Get a specific entity.
-     *
+     *获取一个特定实体
      * @param int|array id
      *
      * @return null|object
@@ -233,7 +233,7 @@ abstract class AbstractCommonModel
 
     /**
      * Encode an array to append to a URL.
-     *
+     *对数据进行编码后追加到url中
      * @param $array
      *
      * @return string
@@ -263,7 +263,7 @@ abstract class AbstractCommonModel
         return unserialize($decoded);
     }
 
-    /**
+    /**生成url
      * @param       $route
      * @param array $routeParams
      * @param bool  $absolute

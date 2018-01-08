@@ -50,6 +50,10 @@ return [
                 'path'       => '/video/hit',
                 'controller' => 'MauticPageBundle:Public:hitVideo',
             ],
+            'mautic_page_qrcode' => [
+                'path'       => '/page/{id}/qrcode',
+                'controller' => 'MauticPageBundle:Page:qrcode',
+            ]
         ],
         'api' => [
             'mautic_api_pagesstandard' => [
@@ -239,6 +243,14 @@ return [
                 'class' => 'Mautic\PageBundle\Form\Type\DashboardHitsInTimeWidgetType',
                 'alias' => 'page_dashboard_hits_in_time_widget',
             ],
+            'mautic.form.type.campaignevent_page' => [
+                'class' => 'Mautic\PageBundle\Form\Type\CampaignEventPageType',
+                'arguments' => [
+                    '@security.token_storage',
+                    '@doctrine'
+                ],
+                'alias' => 'campaignevent_page',
+            ],
         ],
         'models' => [
             'mautic.page.model.page' => [
@@ -250,6 +262,7 @@ return [
                     'mautic.lead.model.field',
                     'mautic.page.model.redirect',
                     'mautic.page.model.trackable',
+                    'mautic.point.model.point',
                 ],
                 'methodCalls' => [
                     'setCatInUrl' => [

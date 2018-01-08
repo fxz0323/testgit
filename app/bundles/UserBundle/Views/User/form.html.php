@@ -30,21 +30,6 @@ $view['slots']->set('headerTitle', $header);
             <div class="form-group mb-0">
 
                 <div class="row">
-                    <div class="col-sm-6">
-
-                        <?php
-                        if (!empty($userId)) {
-                            echo '<a class="btn btn-default" href="' . $view['router']->path('mautic_user_add_field', ['id' => $userId]) . '">新建字段</a>';
-                        }
-                        ?>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-sm-6<?php echo (count($form['firstName']->vars['errors'])) ? ' has-error' : ''; ?>">
-                        <label class="control-label mb-xs"><?php echo $view['form']->label($form['firstName']); ?></label>
-                        <?php echo $view['form']->widget($form['firstName'], ['attr' => ['placeholder' => $form['firstName']->vars['label']]]); ?>
-                        <?php echo $view['form']->errors($form['firstName']); ?>
-                    </div>
                     <div class="col-sm-6<?php echo (count($form['lastName']->vars['errors'])) ? ' has-error' : ''; ?>">
                         <label class="control-label mb-xs"><?php echo $view['form']->label($form['lastName']); ?></label>
                         <?php echo $view['form']->widget($form['lastName'], ['attr' => ['placeholder' => $form['lastName']->vars['label']]]); ?>

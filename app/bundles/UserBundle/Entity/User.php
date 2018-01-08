@@ -60,12 +60,12 @@ class User extends FormEntity implements AdvancedUserInterface, \Serializable, E
     /**
      * @var string
      */
-    private $firstName;
+    private $firstName = '';
 
     /**
      * @var string
      */
-    private $lastName;
+    private $lastName = '';
 
     /**
      * @var string
@@ -133,6 +133,8 @@ class User extends FormEntity implements AdvancedUserInterface, \Serializable, E
 
     private $fields = [];
 
+    private $active = false;
+
     /**
      * @param ORM\ClassMetadata $metadata
      */
@@ -176,7 +178,7 @@ class User extends FormEntity implements AdvancedUserInterface, \Serializable, E
 
         $builder->createManyToOne('role', 'Role')
             ->inversedBy('users')
-            ->addJoinColumn('role_id', 'id', false)
+            ->addJoinColumn('role_id', 'id', true)
             ->build();
 
         $builder->createField('timezone', 'string')
@@ -210,7 +212,11 @@ class User extends FormEntity implements AdvancedUserInterface, \Serializable, E
             ->nullable()
             ->build();
 
+        //custom user fields
         $builder->createField('fields', 'array')
+            ->build();
+
+        $builder->createField('active', 'boolean')
             ->build();
     }
 
@@ -231,9 +237,9 @@ class User extends FormEntity implements AdvancedUserInterface, \Serializable, E
             ]
         ));
 
-        $metadata->addPropertyConstraint('firstName', new Assert\NotBlank(
-            ['message' => 'mautic.user.user.firstname.notblank']
-        ));
+//        $metadata->addPropertyConstraint('firstName', new Assert\NotBlank(
+//            ['message' => 'mautic.user.user.firstname.notblank']
+//        ));
 
         $metadata->addPropertyConstraint('lastName', new Assert\NotBlank(
             ['message' => 'mautic.user.user.lastname.notblank']
@@ -900,5 +906,20 @@ class User extends FormEntity implements AdvancedUserInterface, \Serializable, E
         $this->fields = $fields;
     }
 
+    /**
+     * @return bool
+     */
+    public function isActive()
+    {
+        return $this->active;
+    }
+
+    /**
+     * @param bool $active
+     */
+    public function setActive($active)
+    {
+        $this->active = $active;
+    }
 
 }

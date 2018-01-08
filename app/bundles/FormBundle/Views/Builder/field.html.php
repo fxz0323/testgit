@@ -74,6 +74,14 @@ $propertiesTabError = (isset($form['properties']) && ($view['form']->containsErr
             </li>
             <?php endif; ?>
 
+            <?php if (isset($form['userField'])): ?>
+                <li role="presentation">
+                    <a href="#userfields" aria-controls="userfields" role="tab" data-toggle="tab">
+                        <?php echo $view['translator']->trans('mautic.form.field.section.userfield'); ?>
+                    </a>
+                </li>
+            <?php endif; ?>
+
             <?php if (isset($form['isRequired'])): ?>
             <li role="presentation">
                 <a href="#required" aria-controls="required" role="tab" data-toggle="tab">
@@ -133,6 +141,16 @@ $propertiesTabError = (isset($form['properties']) && ($view['form']->containsErr
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
+
+            <?php if (isset($form['userField'])): ?>
+                <div role="tabpanel" class="tab-pane" id="userfields">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <?php echo $view['form']->row($form['userField']); ?>
+                        </div>
+                    </div>
+                </div>
             <?php endif; ?>
 
             <?php if (isset($form['isRequired'])): ?>

@@ -76,13 +76,18 @@ class SmsQueueCommand extends ModeratedCommand
             if($e->getTriggerDate() < $now)
             {
                 //Sending
+                /** @var \Mautic\SmsBundle\Entity\Sms $sms */
                 $sms = $e->getSms();
                 $listModel = $container->get('mautic.lead.model.list');
                 $lead_list = $listModel->getEntity($properties['segment_id']);
                 $leads = $listModel->getLeadsByList($lead_list);
                 /** @var \Mautic\LeadBundle\Model\LeadModel $leadModel */
-                $leadModel = $this->getModel('lead');
+                $leadModel = $container->get('mautic.lead.model.lead');
                 $sendCount = 0;
+
+                $e->setStatus(1);
+                $e->setSendCount($sendCount);
+                $model->getEventRepository()->saveEntity($e);
 
                 foreach ($leads as $group){
                     foreach($group as $lead){
@@ -91,7 +96,7 @@ class SmsQueueCommand extends ModeratedCommand
                         $sendCount++;
                     }
                 }
-                $e->setStatus(1);
+                $e->setStatus(2);
                 $e->setSendCount($sendCount);
                 $model->getEventRepository()->saveEntity($e);
             }

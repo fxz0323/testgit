@@ -134,7 +134,7 @@ class UserModel extends FormModel
 
         $entity = parent::getEntity($id);
 
-        if ($entity) {
+        if ($entity && $entity->getRole()) {
             //add user's permissions
             $entity->setActivePermissions(
                 $this->em->getRepository('MauticUserBundle:Permission')->getPermissionsByRole($entity->getRole())

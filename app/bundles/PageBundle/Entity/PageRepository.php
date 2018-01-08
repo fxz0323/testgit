@@ -249,4 +249,19 @@ class PageRepository extends CommonRepository
 
         $q->execute();
     }
+
+    public function upSubmitCount($id, $increaseBy = 1, $unique = false)
+    {
+        $q = $this->getEntityManager()->getConnection()->createQueryBuilder();
+
+        $q->update(MAUTIC_TABLE_PREFIX.'pages')
+            ->set('submits', 'submits + '.(int) $increaseBy)
+            ->where('id = '.(int) $id);
+
+        if ($unique) {
+            $q->set('unique_submits', 'unique_submits + '.(int) $increaseBy);
+        }
+
+        $q->execute();
+    }
 }

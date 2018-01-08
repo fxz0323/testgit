@@ -136,9 +136,29 @@ class PointController extends FormController
 
         $actionType = ($this->request->getMethod() == 'POST') ? $this->request->request->get('point[type]', '', true) : '';
 
-        $action  = $this->generateUrl('mautic_point_action', ['objectAction' => 'new']);
         $actions = $model->getPointActions();
-        $form    = $model->createForm($entity, $this->get('form.factory'), $action, [
+        $actionsUsed = $model->getRepository()->findByCreatedBy($this->getUser());
+
+        $used = [];
+        foreach($actionsUsed as $action) {
+            $used[] = $action->getType();
+        }
+
+        foreach ($actions['choices'] as &$choice) {
+            foreach($choice as $key => $value) {
+                if(in_array($key, $used)) {
+                    unset($choice[$key]);
+                }
+            }
+        }
+        foreach ($actions['choices'] as $key => $choice) {
+            if(count($choice) == 0) {
+                unset($actions['choices'][$key]);
+            }
+        }
+
+        $action  = $this->generateUrl('mautic_point_action', ['objectAction' => 'new']);
+        $form  = $model->createForm($entity, $this->get('form.factory'), $action, [
             'pointActions' => $actions,
             'actionType'   => $actionType,
         ]);

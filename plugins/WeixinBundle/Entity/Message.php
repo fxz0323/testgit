@@ -69,6 +69,10 @@ class Message
         $this->createTime = new \DateTime();
     }
 
+    public function __toString()
+    {
+        return $this->msgType;
+    }
     /**
      * @param ORM\ClassMetadata $metadata
      */
@@ -119,7 +123,7 @@ class Message
             ->nullable()
             ->build();
 
-        $builder->createField('imageId', 'integer')
+        $builder->createField('imageId', 'string')
             ->columnName('image_id')
             ->nullable()
             ->build();
@@ -128,52 +132,6 @@ class Message
             ->columnName('image_url')
             ->nullable()
             ->build();
-    }
-
-    /**
-     * @param ClassMetadata $metadata
-     */
-    public static function loadValidatorMetadata(ClassMetadata $metadata)
-    {
-//        $metadata->addPropertyConstraint(
-//            'name',
-//            new NotBlank(
-//                [
-//                    'message' => 'mautic.core.name.required',
-//                ]
-//            )
-//        );
-//
-//        $metadata->addConstraint(new Callback([
-//            'callback' => function (Weixin $sms, ExecutionContextInterface $context) {
-//                $type = $sms->getSmsType();
-//                if ($type == 'list') {
-//                    $validator = $context->getValidator();
-//                    $violations = $validator->validate(
-//                        $sms->getLists(),
-//                        [
-//                            new LeadListAccess(
-//                                [
-//                                    'message' => 'mautic.lead.lists.required',
-//                                ]
-//                            ),
-//                            new NotBlank(
-//                                [
-//                                    'message' => 'mautic.lead.lists.required',
-//                                ]
-//                            ),
-//                        ]
-//                    );
-//
-//                    if (count($violations) > 0) {
-//                        $string = (string) $violations;
-//                        $context->buildViolation($string)
-//                            ->atPath('lists')
-//                            ->addViolation();
-//                    }
-//                }
-//            },
-//        ]));
     }
 
     /**

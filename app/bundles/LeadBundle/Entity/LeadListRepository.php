@@ -25,6 +25,7 @@ use Mautic\CoreBundle\Helper\InputHelper;
 use Mautic\LeadBundle\Event\LeadListFilteringEvent;
 use Mautic\LeadBundle\Event\LeadListFiltersOperatorsEvent;
 use Mautic\LeadBundle\LeadEvents;
+use MauticPlugin\WeixinBundle\Event\Events;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -78,7 +79,7 @@ class LeadListRepository extends CommonRepository
     /**
      * Get a list of lists.
      *
-     * @param bool   $user
+     * @param bool $user
      * @param string $alias
      * @param string $id
      *
@@ -92,7 +93,7 @@ class LeadListRepository extends CommonRepository
             $user = $user->getId();
         }
 
-        $key = (int) $user.$alias.$id;
+        $key = (int)$user . $alias . $id;
         if (isset($lists[$key])) {
             return $lists[$key];
         }
@@ -100,7 +101,7 @@ class LeadListRepository extends CommonRepository
         $q = $this->_em->createQueryBuilder()
             ->from('MauticLeadBundle:LeadList', 'l', 'l.id');
 
-        $q->select('partial l.{id, name, alias}')
+        $q->select('partial l.{id, name, alias, isStatic}')
             ->andWhere($q->expr()->eq('l.isPublished', ':true'))
             ->setParameter('true', true, 'boolean');
 
@@ -191,7 +192,7 @@ class LeadListRepository extends CommonRepository
 
             $q->where(
                 $q->expr()->andX(
-                    $q->expr()->eq('IDENTITY(il.lead)', (int) $lead),
+                    $q->expr()->eq('IDENTITY(il.lead)', (int)$lead),
                     $q->expr()->in('il.manuallyRemoved', ':false')
                 )
             )
@@ -216,7 +217,7 @@ class LeadListRepository extends CommonRepository
         $q = $this->_em->createQueryBuilder()
             ->from('MauticLeadBundle:LeadList', 'l', 'l.id');
 
-        $q->select('partial l.{id, name, alias}')
+        $q->select('partial l.{id, name, alias, isStatic}')
             ->where($q->expr()->eq('l.isPublished', 'true'))
             ->setParameter(':true', true, 'boolean')
             ->andWhere($q->expr()->eq('l.isGlobal', ':true'))
@@ -239,7 +240,9 @@ class LeadListRepository extends CommonRepository
         $q = $this->_em->getConnection()->createQueryBuilder();
 
         $q->select('count(l.lead_id) as thecount, l.leadlist_id')
-            ->from(MAUTIC_TABLE_PREFIX.'lead_lists_leads', 'l');
+            ->from(MAUTIC_TABLE_PREFIX . 'lead_lists_leads', 'l')
+            ->leftJoin('l', 'leads', 'lead', 'l.lead_id = lead.id')
+        ;
 
         $returnArray = (is_array($listIds));
 
@@ -249,7 +252,8 @@ class LeadListRepository extends CommonRepository
 
         $q->where(
             $q->expr()->in('l.leadlist_id', $listIds),
-            $q->expr()->eq('l.manually_removed', ':false')
+            $q->expr()->eq('l.manually_removed', ':false'),
+            $q->expr()->isNotNull('lead.date_identified')
         )
             ->setParameter('false', false, 'boolean')
             ->groupBy('l.leadlist_id');
@@ -291,9 +295,9 @@ class LeadListRepository extends CommonRepository
         $dynamic = ($newOnly || $nonMembersOnly);
         // Limiters
         $batchLimiters = (!array_key_exists('batchLimiters', $args)) ? false : $args['batchLimiters'];
-        $start         = (!array_key_exists('start', $args)) ? false : $args['start'];
-        $limit         = (!array_key_exists('limit', $args)) ? false : $args['limit'];
-        $withMinId     = (!array_key_exists('withMinId', $args)) ? false : $args['withMinId'];
+        $start = (!array_key_exists('start', $args)) ? false : $args['start'];
+        $limit = (!array_key_exists('limit', $args)) ? false : $args['limit'];
+        $withMinId = (!array_key_exists('withMinId', $args)) ? false : $args['withMinId'];
 
         if (!$lists instanceof PersistentCollection && !is_array($lists) || isset($lists['id'])) {
             $lists = [$lists];
@@ -304,13 +308,13 @@ class LeadListRepository extends CommonRepository
             $leads = ($countOnly) ? 0 : [];
 
             if ($l instanceof LeadList) {
-                $id      = $l->getId();
+                $id = $l->getId();
                 $filters = $l->getFilters();
             } elseif (is_array($l)) {
-                $id      = $l['id'];
+                $id = $l['id'];
                 $filters = (!$dynamic) ? [] : $l['filters'];
             } elseif (!$dynamic) {
-                $id      = $l;
+                $id = $l;
                 $filters = [];
             }
 
@@ -319,8 +323,8 @@ class LeadListRepository extends CommonRepository
             if ($dynamic && count($filters)) {
                 $q = $this->getEntityManager()->getConnection()->createQueryBuilder();
                 if ($countOnly) {
-                    $count  = ($this->hasCompanyFilter) ? 'count(distinct(l.id))' : 'count(l.id)';
-                    $select = $count.' as lead_count, max(l.id) as max_id';
+                    $count = ($this->hasCompanyFilter) ? 'count(distinct(l.id))' : 'count(l.id)';
+                    $select = $count . ' as lead_count, max(l.id) as max_id';
                     if ($withMinId) {
                         $select .= ', min(l.id) as min_id';
                     }
@@ -331,7 +335,7 @@ class LeadListRepository extends CommonRepository
                 }
 
                 $q->select($select)
-                    ->from(MAUTIC_TABLE_PREFIX.'leads', 'l');
+                    ->from(MAUTIC_TABLE_PREFIX . 'leads', 'l');
 
                 $batchExpr = $q->expr()->andX();
                 // Only leads that existed at the time of count
@@ -383,7 +387,7 @@ class LeadListRepository extends CommonRepository
 
                     $q->leftJoin(
                         'l',
-                        MAUTIC_TABLE_PREFIX.'lead_lists_leads',
+                        MAUTIC_TABLE_PREFIX . 'lead_lists_leads',
                         'll',
                         $listOnExpr
                     );
@@ -397,7 +401,7 @@ class LeadListRepository extends CommonRepository
                     $q->andWhere($expr);
                 } elseif ($nonMembersOnly) {
                     // Only leads that are part of the list that no longer match filters and have not been manually removed
-                    $q->join('l', MAUTIC_TABLE_PREFIX.'lead_lists_leads', 'll', 'l.id = ll.lead_id');
+                    $q->join('l', MAUTIC_TABLE_PREFIX . 'lead_lists_leads', 'll', 'l.id = ll.lead_id');
 
                     $mainExpr = $q->expr()->andX();
                     if ($batchLimiters && !empty($batchLimiters['dateTime'])) {
@@ -411,7 +415,7 @@ class LeadListRepository extends CommonRepository
                     $mainExpr->addMultiple(
                         [
                             $q->expr()->eq('ll.manually_added', ':false'),
-                            $q->expr()->eq('ll.leadlist_id', (int) $id),
+                            $q->expr()->eq('ll.leadlist_id', (int)$id),
                         ]
                     );
                     $q->setParameter('false', false, 'boolean');
@@ -419,7 +423,7 @@ class LeadListRepository extends CommonRepository
                     // Find the contacts that are in the segment but no longer have filters that are applicable
                     $sq = $this->getEntityManager()->getConnection()->createQueryBuilder();
                     $sq->select('l.id')
-                        ->from(MAUTIC_TABLE_PREFIX.'leads', 'l');
+                        ->from(MAUTIC_TABLE_PREFIX . 'leads', 'l');
 
                     $expr = $this->generateSegmentExpression($filters, $parameters, $sq, $q);
 
@@ -471,14 +475,14 @@ class LeadListRepository extends CommonRepository
                 $q = $this->_em->getConnection()->createQueryBuilder();
                 if ($countOnly) {
                     $q->select('max(ll.lead_id) as max_id, count(ll.lead_id) as lead_count')
-                        ->from(MAUTIC_TABLE_PREFIX.'lead_lists_leads', 'll');
+                        ->from(MAUTIC_TABLE_PREFIX . 'lead_lists_leads', 'll');
                 } elseif ($idOnly) {
                     $q->select('ll.lead_id as id')
-                        ->from(MAUTIC_TABLE_PREFIX.'lead_lists_leads', 'll');
+                        ->from(MAUTIC_TABLE_PREFIX . 'lead_lists_leads', 'll');
                 } else {
                     $q->select('l.*')
-                        ->from(MAUTIC_TABLE_PREFIX.'leads', 'l')
-                        ->join('l', MAUTIC_TABLE_PREFIX.'lead_lists_leads', 'll', 'l.id = ll.lead_id');
+                        ->from(MAUTIC_TABLE_PREFIX . 'leads', 'l')
+                        ->join('l', MAUTIC_TABLE_PREFIX . 'lead_lists_leads', 'll', 'l.id = ll.lead_id');
                 }
 
                 // Filter by list
@@ -487,7 +491,7 @@ class LeadListRepository extends CommonRepository
                     $q->expr()->eq('ll.manually_removed', ':false')
                 );
 
-                $q->setParameter('list', (int) $id)
+                $q->setParameter('list', (int)$id)
                     ->setParameter('false', false, 'boolean');
 
                 // Set limits if applied
@@ -524,8 +528,8 @@ class LeadListRepository extends CommonRepository
     }
 
     /**
-     * @param array        $filters
-     * @param array        $parameters
+     * @param array $filters
+     * @param array $parameters
      * @param QueryBuilder $q
      *
      * @return QueryBuilder
@@ -547,7 +551,7 @@ class LeadListRepository extends CommonRepository
         $this->hasCompanyFilter = false;
         if (isset($objectFilters['company'])) {
             $this->listFiltersInnerJoinCompany = false;
-            $exprCompany                       = $this->getListFilterExpr($objectFilters['company'], $parameters, $q, false, null, 'company');
+            $exprCompany = $this->getListFilterExpr($objectFilters['company'], $parameters, $q, false, null, 'company');
 
             if ($exprCompany->count()) {
                 $this->hasCompanyFilter = true;
@@ -609,9 +613,9 @@ class LeadListRepository extends CommonRepository
      * @param              $filters
      * @param              $parameters
      * @param QueryBuilder $q
-     * @param bool         $not
-     * @param null         $leadId
-     * @param string       $object
+     * @param bool $not
+     * @param null $leadId
+     * @param string $object
      *
      * @return \Doctrine\DBAL\Query\Expression\CompositeExpression|mixed
      */
@@ -625,14 +629,14 @@ class LeadListRepository extends CommonRepository
         }
 
         $isCompany = ('company' === $object);
-        $schema    = $this->_em->getConnection()->getSchemaManager();
+        $schema = $this->_em->getConnection()->getSchemaManager();
         // Get table columns
         if (null === $leadTable) {
             /** @var \Doctrine\DBAL\Schema\Column[] $leadTable */
-            $leadTable = $schema->listTableColumns(MAUTIC_TABLE_PREFIX.'leads');
+            $leadTable = $schema->listTableColumns(MAUTIC_TABLE_PREFIX . 'leads');
         }
         if (null === $companyTable) {
-            $companyTable = $schema->listTableColumns(MAUTIC_TABLE_PREFIX.'companies');
+            $companyTable = $schema->listTableColumns(MAUTIC_TABLE_PREFIX . 'companies');
         }
         $options = $this->getFilterExpressionFunctions();
 
@@ -643,11 +647,11 @@ class LeadListRepository extends CommonRepository
             $options = $event->getOperators();
         }
 
-        $groups    = [];
+        $groups = [];
         $groupExpr = $q->expr()->andX();
 
         foreach ($filters as $k => $details) {
-            if (isset($details['object']) && $details['object'] != $object) {
+            if (isset($details['object']) && $details['object'] != $object && !in_array($details['object'], ['weixin', 'order', 'page', 'email', 'sms'])) {
                 continue;
             }
 
@@ -671,7 +675,7 @@ class LeadListRepository extends CommonRepository
             $columnType = false;
             if ($column) {
                 // Format the field based on platform specific functions that DBAL doesn't support natively
-                $formatter  = AbstractFormatter::createFormatter($this->_em->getConnection());
+                $formatter = AbstractFormatter::createFormatter($this->_em->getConnection());
                 $columnType = $column->getType();
 
                 switch ($details['type']) {
@@ -702,13 +706,13 @@ class LeadListRepository extends CommonRepository
             if ($details['glue'] == 'or') {
                 // Create a new group of andX expressions
                 if ($groupExpr->count()) {
-                    $groups[]  = $groupExpr;
+                    $groups[] = $groupExpr;
                     $groupExpr = $q->expr()->andX();
                 }
             }
 
-            $parameter        = $this->generateRandomParameterName();
-            $exprParameter    = ":$parameter";
+            $parameter = $this->generateRandomParameterName();
+            $exprParameter = ":$parameter";
             $ignoreAutoFilter = false;
 
             // Special handling of relative date strings
@@ -716,13 +720,13 @@ class LeadListRepository extends CommonRepository
                 $relativeDateStrings = $this->getRelativeDateStrings();
                 // Check if the column type is a date/time stamp
                 $isTimestamp = ($details['type'] == 'datetime' || $columnType instanceof UTCDateTimeType);
-                $getDate     = function (&$string) use ($isTimestamp, $relativeDateStrings, &$details, &$func, $not) {
-                    $key             = array_search($string, $relativeDateStrings);
-                    $dtHelper        = new DateTimeHelper('midnight today', null, 'local');
+                $getDate = function (&$string) use ($isTimestamp, $relativeDateStrings, &$details, &$func, $not) {
+                    $key = array_search($string, $relativeDateStrings);
+                    $dtHelper = new DateTimeHelper('midnight today', null, 'local');
                     $requiresBetween = (in_array($func, ['eq', 'neq']) && $isTimestamp);
 
-                    $timeframe  = str_replace('mautic.lead.list.', '', $key);
-                    $modifier   = false;
+                    $timeframe = str_replace('mautic.lead.list.', '', $key);
+                    $modifier = false;
                     $isRelative = true;
 
                     switch ($timeframe) {
@@ -764,7 +768,7 @@ class LeadListRepository extends CommonRepository
                         case 'week_next':
                         case 'week_this':
                             $interval = str_replace('week_', '', $timeframe);
-                            $dtHelper->setDateTime('midnight monday '.$interval.' week', null);
+                            $dtHelper->setDateTime('midnight monday ' . $interval . ' week', null);
 
                             // This week: Monday 2015-08-24 00:00:00
                             if ($requiresBetween) {
@@ -796,7 +800,7 @@ class LeadListRepository extends CommonRepository
                         case 'month_next':
                         case 'month_this':
                             $interval = substr($key, -4);
-                            $dtHelper->setDateTime('midnight first day of '.$interval.' month', null);
+                            $dtHelper->setDateTime('midnight first day of ' . $interval . ' month', null);
 
                             // This month: 2015-08-01 00:00:00
                             if ($requiresBetween) {
@@ -827,7 +831,7 @@ class LeadListRepository extends CommonRepository
                         case 'year_next':
                         case 'year_this':
                             $interval = substr($key, -4);
-                            $dtHelper->setDateTime('midnight first day of '.$interval.' year', null);
+                            $dtHelper->setDateTime('midnight first day of ' . $interval . ' year', null);
 
                             // This year: 2015-01-01 00:00:00
                             if ($requiresBetween) {
@@ -876,7 +880,7 @@ class LeadListRepository extends CommonRepository
                             $endWith = ($isTimestamp) ? $dtHelper->toUtcString('Y-m-d H:i:s') : $dtHelper->toUtcString('Y-m-d');
 
                             // Use a between statement
-                            $func              = ($func == 'neq') ? 'notBetween' : 'between';
+                            $func = ($func == 'neq') ? 'notBetween' : 'between';
                             $details['filter'] = [$startWith, $endWith];
                         } else {
                             if ($modifier) {
@@ -914,36 +918,36 @@ class LeadListRepository extends CommonRepository
                     $subqb = $this->_em->getConnection()
                         ->createQueryBuilder()
                         ->select('id')
-                        ->from(MAUTIC_TABLE_PREFIX.'page_hits', $alias);
+                        ->from(MAUTIC_TABLE_PREFIX . 'page_hits', $alias);
                     switch ($func) {
                         case 'eq':
                         case 'neq':
                             $parameters[$parameter] = $details['filter'];
                             $subqb->where(
                                 $q->expr()->andX(
-                                    $q->expr()->eq($alias.'.'.$column, $exprParameter),
-                                    $q->expr()->eq($alias.'.lead_id', 'l.id')
+                                    $q->expr()->eq($alias . '.' . $column, $exprParameter),
+                                    $q->expr()->eq($alias . '.lead_id', 'l.id')
                                 )
                             );
                             break;
                         case 'like':
                         case '!like':
-                            $parameters[$parameter] = '%'.$details['filter'].'%';
-                        $subqb->where(
+                            $parameters[$parameter] = '%' . $details['filter'] . '%';
+                            $subqb->where(
                                 $q->expr()->andX(
-                                    $q->expr()->like($alias.'.'.$column, $exprParameter),
-                                    $q->expr()->eq($alias.'.lead_id', 'l.id')
+                                    $q->expr()->like($alias . '.' . $column, $exprParameter),
+                                    $q->expr()->eq($alias . '.lead_id', 'l.id')
                                 )
                             );
                             break;
                         case 'regexp':
                         case 'notRegexp':
                             $parameters[$parameter] = $details['filter'];
-                            $not                    = ($func === 'notRegexp') ? ' NOT' : '';
+                            $not = ($func === 'notRegexp') ? ' NOT' : '';
                             $subqb->where(
                                 $q->expr()->andX(
-                                    $q->expr()->eq($alias.'.lead_id', 'l.id'),
-                                    $alias.'.'.$column.$not.' REGEXP '.$exprParameter
+                                    $q->expr()->eq($alias . '.lead_id', 'l.id'),
+                                    $alias . '.' . $column . $not . ' REGEXP ' . $exprParameter
                                 )
                             );
                             break;
@@ -951,54 +955,54 @@ class LeadListRepository extends CommonRepository
                     // Specific lead
                     if (!empty($leadId)) {
                         $subqb->andWhere($subqb->expr()
-                            ->eq($alias.'.lead_id', $leadId));
+                            ->eq($alias . '.lead_id', $leadId));
                     }
                     $groupExpr->add(sprintf('%s (%s)', $operand, $subqb->getSQL()));
                     break;
                 case 'hit_url_date':
                 case 'lead_email_read_date':
                     $operand = (in_array($func, ['eq', 'gt', 'lt', 'gte', 'lte', 'between'])) ? 'EXISTS' : 'NOT EXISTS';
-                    $table   = 'page_hits';
-                    $column  = 'date_hit';
+                    $table = 'page_hits';
+                    $column = 'date_hit';
                     if ($details['field'] == 'lead_email_read_date') {
                         $column = 'date_read';
-                        $table  = 'email_stats';
+                        $table = 'email_stats';
                     }
                     $subqb = $this->_em->getConnection()
                         ->createQueryBuilder()
                         ->select('id')
-                        ->from(MAUTIC_TABLE_PREFIX.$table, $alias);
+                        ->from(MAUTIC_TABLE_PREFIX . $table, $alias);
                     switch ($func) {
                         case 'eq':
                         case 'neq':
                             $parameters[$parameter] = $details['filter'];
                             $subqb->where($q->expr()
                                 ->andX($q->expr()
-                                    ->eq($alias.'.'.$column, $exprParameter), $q->expr()
-                                    ->eq($alias.'.lead_id', 'l.id')));
+                                    ->eq($alias . '.' . $column, $exprParameter), $q->expr()
+                                    ->eq($alias . '.lead_id', 'l.id')));
                             break;
                         case 'between':
                         case 'notBetween':
                             // Filter should be saved with double || to separate options
-                            $parameter2              = $this->generateRandomParameterName();
-                            $parameters[$parameter]  = $details['filter'][0];
+                            $parameter2 = $this->generateRandomParameterName();
+                            $parameters[$parameter] = $details['filter'][0];
                             $parameters[$parameter2] = $details['filter'][1];
-                            $exprParameter2          = ":$parameter2";
-                            $ignoreAutoFilter        = true;
-                            $field                   = $column;
+                            $exprParameter2 = ":$parameter2";
+                            $ignoreAutoFilter = true;
+                            $field = $column;
                             if ($func == 'between') {
                                 $subqb->where($q->expr()
                                     ->andX(
-                                        $q->expr()->gte($alias.'.'.$field, $exprParameter),
-                                        $q->expr()->lt($alias.'.'.$field, $exprParameter2),
-                                        $q->expr()->eq($alias.'.lead_id', 'l.id')
+                                        $q->expr()->gte($alias . '.' . $field, $exprParameter),
+                                        $q->expr()->lt($alias . '.' . $field, $exprParameter2),
+                                        $q->expr()->eq($alias . '.lead_id', 'l.id')
                                     ));
                             } else {
                                 $subqb->where($q->expr()
                                     ->andX(
-                                        $q->expr()->lt($alias.'.'.$field, $exprParameter),
-                                        $q->expr()->gte($alias.'.'.$field, $exprParameter2),
-                                        $q->expr()->eq($alias.'.lead_id', 'l.id')
+                                        $q->expr()->lt($alias . '.' . $field, $exprParameter),
+                                        $q->expr()->gte($alias . '.' . $field, $exprParameter2),
+                                        $q->expr()->eq($alias . '.lead_id', 'l.id')
                                     ));
                             }
                             break;
@@ -1006,84 +1010,83 @@ class LeadListRepository extends CommonRepository
                             $parameters[$parameter] = $details['filter'];
                             $subqb->where($q->expr()
                                 ->andX($q->expr()
-                                    ->$func($alias.'.'.$column, $exprParameter), $q->expr()
-                                    ->eq($alias.'.lead_id', 'l.id')));
+                                    ->$func($alias . '.' . $column, $exprParameter), $q->expr()
+                                    ->eq($alias . '.lead_id', 'l.id')));
                             break;
                     }
                     // Specific lead
                     if (!empty($leadId)) {
                         $subqb->andWhere($subqb->expr()
-                            ->eq($alias.'.lead_id', $leadId));
+                            ->eq($alias . '.lead_id', $leadId));
                     }
                     $groupExpr->add(sprintf('%s (%s)', $operand, $subqb->getSQL()));
                     break;
                 case 'page_id':
-                case 'email_id':
                 case 'redirect_id':
                 case 'notification':
                     $operand = ($func == 'eq') ? 'EXISTS' : 'NOT EXISTS';
-                    $column  = $details['field'];
-                    $table   = 'page_hits';
-                    $select  = 'id';
+                    $column = $details['field'];
+                    $table = 'page_hits';
+                    $select = 'id';
 
                     if ($details['field'] == 'notification') {
-                        $table  = 'push_ids';
+                        $table = 'push_ids';
                         $column = 'id';
                     }
 
                     $subqb = $this->_em->getConnection()
                         ->createQueryBuilder()
                         ->select($select)
-                        ->from(MAUTIC_TABLE_PREFIX.$table, $alias);
+                        ->from(MAUTIC_TABLE_PREFIX . $table, $alias);
 
                     if ($details['filter'] == 1) {
                         $subqb->where($q->expr()
                             ->andX($q->expr()
-                                ->isNotNull($alias.'.'.$column),  $q->expr()
-                                ->eq($alias.'.lead_id', 'l.id')));
+                                ->isNotNull($alias . '.' . $column), $q->expr()
+                                ->eq($alias . '.lead_id', 'l.id')));
                     } else {
                         $subqb->where($q->expr()
                             ->andX($q->expr()
-                                ->isNull($alias.'.'.$column),  $q->expr()
-                                ->eq($alias.'.lead_id', 'l.id')));
+                                ->isNull($alias . '.' . $column), $q->expr()
+                                ->eq($alias . '.lead_id', 'l.id')));
                     }
                     // Specific lead
                     if (!empty($leadId)) {
                         $subqb->andWhere($subqb->expr()
-                            ->eq($alias.'.lead_id', $leadId));
+                            ->eq($alias . '.lead_id', $leadId));
                     }
                     $groupExpr->add(sprintf('%s (%s)', $operand, $subqb->getSQL()));
                     break;
                 case 'sessions':
                     $operand = 'EXISTS';
-                    $column  = $details['field'];
-                    $table   = 'page_hits';
-                    $select  = 'COUNT(id)';
+                    $column = $details['field'];
+                    $table = 'page_hits';
+                    $select = 'COUNT(id)';
 
                     $subqb = $this->_em->getConnection()
                         ->createQueryBuilder()
                         ->select($select)
-                        ->from(MAUTIC_TABLE_PREFIX.$table, $alias);
+                        ->from(MAUTIC_TABLE_PREFIX . $table, $alias);
 
                     $alias2 = $this->generateRandomParameterName();
                     $subqb2 = $this->_em->getConnection()
                         ->createQueryBuilder()
-                        ->select($alias2.'.id')
-                        ->from(MAUTIC_TABLE_PREFIX.$table, $alias2);
+                        ->select($alias2 . '.id')
+                        ->from(MAUTIC_TABLE_PREFIX . $table, $alias2);
 
                     $subqb2->where($q->expr()
                         ->andX(
-                            $q->expr()->eq($alias2.'.lead_id', 'l.id'),
-                            $q->expr()->gt($alias2.'.date_hit', '('.$alias.'.date_hit - INTERVAL 30 MINUTE)'),
-                            $q->expr()->lt($alias2.'.date_hit', $alias.'.date_hit')
+                            $q->expr()->eq($alias2 . '.lead_id', 'l.id'),
+                            $q->expr()->gt($alias2 . '.date_hit', '(' . $alias . '.date_hit - INTERVAL 30 MINUTE)'),
+                            $q->expr()->lt($alias2 . '.date_hit', $alias . '.date_hit')
                         ));
 
                     $parameters[$parameter] = $details['filter'];
                     $subqb->where($q->expr()
                         ->andX($q->expr()
-                            ->eq($alias.'.lead_id', 'l.id'), $q->expr()
-                            ->isNull($alias.'.email_id'), $q->expr()
-                            ->isNull($alias.'.redirect_id'),
+                            ->eq($alias . '.lead_id', 'l.id'), $q->expr()
+                            ->isNull($alias . '.email_id'), $q->expr()
+                            ->isNull($alias . '.redirect_id'),
                             sprintf('%s (%s)', 'NOT EXISTS', $subqb2->getSQL())));
 
                     $opr = '';
@@ -1106,56 +1109,56 @@ class LeadListRepository extends CommonRepository
                     }
                     if ($opr) {
                         $parameters[$parameter] = $details['filter'];
-                        $subqb->having($select.$opr.$details['filter']);
+                        $subqb->having($select . $opr . $details['filter']);
                     }
                     $groupExpr->add(sprintf('%s (%s)', $operand, $subqb->getSQL()));
                     break;
                 case 'hit_url_count':
                 case 'lead_email_read_count':
                     $operand = 'EXISTS';
-                    $column  = $details['field'];
-                    $table   = 'page_hits';
-                    $select  = 'COUNT(id)';
+                    $column = $details['field'];
+                    $table = 'page_hits';
+                    $select = 'COUNT(id)';
                     if ($details['field'] == 'lead_email_read_count') {
-                        $table  = 'email_stats';
+                        $table = 'email_stats';
                         $select = 'SUM(open_count)';
                     }
                     $subqb = $this->_em->getConnection()
                         ->createQueryBuilder()
                         ->select($select)
-                        ->from(MAUTIC_TABLE_PREFIX.$table, $alias);
+                        ->from(MAUTIC_TABLE_PREFIX . $table, $alias);
 
                     $parameters[$parameter] = $details['filter'];
                     $subqb->where($q->expr()
                         ->andX($q->expr()
-                            ->eq($alias.'.lead_id', 'l.id')));
+                            ->eq($alias . '.lead_id', 'l.id')));
 
-                $opr = '';
-                switch ($func) {
-                    case 'eq':
-                        $opr = '=';
-                        break;
-                    case 'gt':
-                        $opr = '>';
-                        break;
-                    case 'gte':
-                        $opr = '>=';
-                        break;
-                    case 'lt':
-                        $opr = '<';
-                        break;
-                    case 'lte':
-                        $opr = '<=';
-                        break;
-                }
+                    $opr = '';
+                    switch ($func) {
+                        case 'eq':
+                            $opr = '=';
+                            break;
+                        case 'gt':
+                            $opr = '>';
+                            break;
+                        case 'gte':
+                            $opr = '>=';
+                            break;
+                        case 'lt':
+                            $opr = '<';
+                            break;
+                        case 'lte':
+                            $opr = '<=';
+                            break;
+                    }
 
-                if ($opr) {
-                    $parameters[$parameter] = $details['filter'];
-                    $subqb->having($select.$opr.$details['filter']);
-                }
+                    if ($opr) {
+                        $parameters[$parameter] = $details['filter'];
+                        $subqb->having($select . $opr . $details['filter']);
+                    }
 
-                $groupExpr->add(sprintf('%s (%s)', $operand, $subqb->getSQL()));
-                break;
+                    $groupExpr->add(sprintf('%s (%s)', $operand, $subqb->getSQL()));
+                    break;
 
                 case 'dnc_bounced':
                 case 'dnc_unsubscribed':
@@ -1164,7 +1167,7 @@ class LeadListRepository extends CommonRepository
                     // Special handling of do not contact
                     $func = (($func == 'eq' && $details['filter']) || ($func == 'neq' && !$details['filter'])) ? 'EXISTS' : 'NOT EXISTS';
 
-                    $parts   = explode('_', $details['field']);
+                    $parts = explode('_', $details['field']);
                     $channel = 'email';
 
                     if (count($parts) === 3) {
@@ -1172,21 +1175,21 @@ class LeadListRepository extends CommonRepository
                     }
 
                     $channelParameter = $this->generateRandomParameterName();
-                    $subqb            = $this->_em->getConnection()->createQueryBuilder()
+                    $subqb = $this->_em->getConnection()->createQueryBuilder()
                         ->select('null')
-                        ->from(MAUTIC_TABLE_PREFIX.'lead_donotcontact', $alias)
+                        ->from(MAUTIC_TABLE_PREFIX . 'lead_donotcontact', $alias)
                         ->where(
                             $q->expr()->andX(
-                                $q->expr()->eq($alias.'.reason', $exprParameter),
-                                $q->expr()->eq($alias.'.lead_id', 'l.id'),
-                                $q->expr()->eq($alias.'.channel', ":$channelParameter")
+                                $q->expr()->eq($alias . '.reason', $exprParameter),
+                                $q->expr()->eq($alias . '.lead_id', 'l.id'),
+                                $q->expr()->eq($alias . '.channel', ":$channelParameter")
                             )
                         );
 
                     // Specific lead
                     if (!empty($leadId)) {
                         $subqb->andWhere(
-                            $subqb->expr()->eq($alias.'.lead_id', $leadId)
+                            $subqb->expr()->eq($alias . '.lead_id', $leadId)
                         );
                     }
 
@@ -1199,7 +1202,7 @@ class LeadListRepository extends CommonRepository
 
                     $ignoreAutoFilter = true;
 
-                    $parameters[$parameter]        = ($parts[1] === 'bounced') ? DoNotContact::BOUNCED : DoNotContact::UNSUBSCRIBED;
+                    $parameters[$parameter] = ($parts[1] === 'bounced') ? DoNotContact::BOUNCED : DoNotContact::UNSUBSCRIBED;
                     $parameters[$channelParameter] = $channel;
 
                     break;
@@ -1215,52 +1218,52 @@ class LeadListRepository extends CommonRepository
 
                     $ignoreAutoFilter = true;
                     foreach ($details['filter'] as &$value) {
-                        $value = (int) $value;
+                        $value = (int)$value;
                     }
 
-                    $subQb   = $this->_em->getConnection()->createQueryBuilder();
+                    $subQb = $this->_em->getConnection()->createQueryBuilder();
                     $subExpr = $subQb->expr()->andX(
-                        $subQb->expr()->eq($alias.'.lead_id', 'l.id')
+                        $subQb->expr()->eq($alias . '.lead_id', 'l.id')
                     );
 
                     // Specific lead
                     if (!empty($leadId)) {
                         $subExpr->add(
-                            $subQb->expr()->eq($alias.'.lead_id', $leadId)
+                            $subQb->expr()->eq($alias . '.lead_id', $leadId)
                         );
                     }
 
                     switch ($details['field']) {
                         case 'leadlist':
-                            $table  = 'lead_lists_leads';
+                            $table = 'lead_lists_leads';
                             $column = 'leadlist_id';
 
                             $falseParameter = $this->generateRandomParameterName();
                             $subExpr->add(
-                                $subQb->expr()->eq($alias.'.manually_removed', ":$falseParameter")
+                                $subQb->expr()->eq($alias . '.manually_removed', ":$falseParameter")
                             );
                             $parameters[$falseParameter] = false;
                             break;
                         case 'tags':
-                            $table  = 'lead_tags_xref';
+                            $table = 'lead_tags_xref';
                             $column = 'tag_id';
                             break;
                         case 'globalcategory':
-                            $table  = 'lead_categories';
+                            $table = 'lead_categories';
                             $column = 'category_id';
                             break;
                         case 'lead_email_received':
-                            $table  = 'email_stats';
+                            $table = 'email_stats';
                             $column = 'email_id';
 
                             $trueParameter = $this->generateRandomParameterName();
                             $subExpr->add(
-                                $subQb->expr()->eq($alias.'.is_read', ":$trueParameter")
+                                $subQb->expr()->eq($alias . '.is_read', ":$trueParameter")
                             );
                             $parameters[$trueParameter] = true;
                             break;
                         case 'lead_email_sent':
-                            $table  = 'email_stats';
+                            $table = 'email_stats';
                             $column = 'email_id';
                             break;
                     }
@@ -1270,7 +1273,7 @@ class LeadListRepository extends CommonRepository
                     );
 
                     $subQb->select('null')
-                        ->from(MAUTIC_TABLE_PREFIX.$table, $alias)
+                        ->from(MAUTIC_TABLE_PREFIX . $table, $alias)
                         ->where($subExpr);
 
                     $groupExpr->add(
@@ -1284,15 +1287,15 @@ class LeadListRepository extends CommonRepository
                     $subQb = $this->_em->getConnection()
                         ->createQueryBuilder()
                         ->select('null')
-                        ->from(MAUTIC_TABLE_PREFIX.'stages', $alias);
+                        ->from(MAUTIC_TABLE_PREFIX . 'stages', $alias);
                     switch ($func) {
                         case 'eq':
                         case 'neq':
                             $parameters[$parameter] = $details['filter'];
                             $subQb->where(
                                 $q->expr()->andX(
-                                    $q->expr()->eq($alias.'.id', 'l.stage_id'),
-                                    $q->expr()->eq($alias.'.id', ":$parameter")
+                                    $q->expr()->eq($alias . '.id', 'l.stage_id'),
+                                    $q->expr()->eq($alias . '.id', ":$parameter")
                                 )
                             );
                             break;
@@ -1308,17 +1311,17 @@ class LeadListRepository extends CommonRepository
                     $subQb = $this->_em->getConnection()
                         ->createQueryBuilder()
                         ->select('null')
-                        ->from(MAUTIC_TABLE_PREFIX.'integration_entity', $alias);
+                        ->from(MAUTIC_TABLE_PREFIX . 'integration_entity', $alias);
                     switch ($func) {
                         case 'eq':
                         case 'neq':
                             $parameters[$parameter] = $details['filter'];
                             $subQb->where(
                                 $q->expr()->andX(
-                                    $q->expr()->eq($alias.'.internal_entity_id', 'l.id'),
-                                    $q->expr()->eq($alias.'.integration_entity_id', ":$parameter"),
-                                    $q->expr()->eq($alias.'.internal_entity', "'lead'"),
-                                    $q->expr()->eq($alias.'.integration_entity', "'CampaignMember'")
+                                    $q->expr()->eq($alias . '.internal_entity_id', 'l.id'),
+                                    $q->expr()->eq($alias . '.integration_entity_id', ":$parameter"),
+                                    $q->expr()->eq($alias . '.internal_entity', "'lead'"),
+                                    $q->expr()->eq($alias . '.integration_entity', "'CampaignMember'")
                                 )
                             );
                             break;
@@ -1326,6 +1329,299 @@ class LeadListRepository extends CommonRepository
 
                     $groupExpr->add(sprintf('%s (%s)', $operand, $subQb->getSQL()));
 
+                    break;
+                // weixin query
+                case 'weixin_subscribe':
+                case 'weixin_unsubscribe':
+                case 'weixin_text':
+                case 'weixin_click':
+                case 'weixin_scan':
+
+                    switch ($details['field']) {
+                        case 'weixin_subscribe':
+                            $event = Events::WEIXIN_SUBSCRIBE;
+                            break;
+                        case 'weixin_unsubscribe':
+                            $event = Events::WEIXIN_UNSUBSCRIBE;
+                            break;
+                        case 'weixin_text':
+                            $event = Events::WEIXIN_TEXT;
+                            break;
+                        case 'weixin_click':
+                            $event = Events::WEIXIN_CLICK;
+                            break;
+                        case 'weixin_scan':
+                            $event = Events::WEIXIN_SCAN;
+                            break;
+                    }
+
+                    $operand = ($func == 'in') ? 'EXISTS' : 'NOT EXISTS';
+                    $column = $details['field'];
+                    $table = 'weixin_lead_action';
+                    $select = 'id';
+
+                    $subqb = $this->_em->getConnection()
+                        ->createQueryBuilder()
+                        ->select($select)
+                        ->from(MAUTIC_TABLE_PREFIX . $table, $alias)
+                        ->where($alias . ".event = '" . $event . "'")
+                        ->andWhere($alias . ".contact_id = l.id")
+                        ->setParameter('event', $event);
+
+                    if (!empty($details['filter'])) {
+                        $subqb->andWhere($alias . '.weixin_id IN (' . implode(',', $details['filter']) . ')');
+                    }
+
+                    // Specific lead
+                    if (!empty($leadId)) {
+                        $subqb->andWhere($subqb->expr()
+                            ->eq($alias . '.lead_id', $leadId));
+                    }
+                    $groupExpr->add(sprintf('%s (%s)', $operand, $subqb->getSQL()));
+                    break;
+                case 'total_count':
+                case 'total_price':
+                case 'price_per_order':
+//                case 'number_per_month':
+//                case 'price_per_month':
+                case 'since_last_bought':
+                case 'first_bought':
+                case 'last_bought':
+//                case 'days_per_order':
+                    $operand = 'EXISTS';
+                    $column = $details['field'];
+                    $table = 'lead_order';
+
+                    if ($details['field'] == 'total_count') {
+                        $select = 'COUNT(id)';
+                    }
+                    if ($details['field'] == 'total_price') {
+                        $select = 'SUM(total_fee)';
+                    }
+                    if ($details['field'] == 'since_last_bought') {
+                        $select = 'DATEDIFF(now(), MAX(order_time))';
+                    }
+                    if ($details['field'] == 'first_bought') {
+                        $select = 'MIN(order_time)';
+                    }
+                    if ($details['field'] == 'last_bought') {
+                        $select = 'MAX(order_time)';
+                    }
+                    if ($details['field'] == 'price_per_order') {
+                        $select = 'SUM(total_fee) / COUNT(id)';
+                    }
+                    $subqb = $this->_em->getConnection()
+                        ->createQueryBuilder()
+                        ->select($select)
+                        ->from(MAUTIC_TABLE_PREFIX . $table, $alias);
+
+
+                    $subqb->where($q->expr()
+                        ->andX($q->expr()
+                            ->eq($alias . '.contact_id', 'l.id')));
+
+                    $opr = '';
+                    switch ($func) {
+                        case 'eq':
+                            $opr = '=';
+                            break;
+                        case 'gt':
+                            $opr = '>';
+                            break;
+                        case 'gte':
+                            $opr = '>=';
+                            break;
+                        case 'lt':
+                            $opr = '<';
+                            break;
+                        case 'lte':
+                            $opr = '<=';
+                            break;
+                    }
+
+                    if ($opr) {
+                        $subqb->groupBy($alias . '.contact_id');
+
+                        //for date, should add quotes
+                        if (in_array($details['field'], ['first_bought', 'last_bought'])) {
+                            $subqb->having($select . $opr . "'".$details['filter']."'");
+                        }else{
+                            $subqb->having($select . $opr . $details['filter']);
+                        }
+
+
+                    }
+
+                    $groupExpr->add(sprintf('%s (%s)', $operand, $subqb->getSQL()));
+                    break;
+
+                case 'order_origin':
+                case 'order_no':
+                case 'order_time':
+                case 'order_price':
+                case 'order_product_type':
+                    $operand = in_array($func, ['eq', 'like', 'regexp', 'notRegexp']) ? 'EXISTS' : 'NOT EXISTS';
+                    $table = 'lead_order';
+                    $alias2 = $this->generateRandomParameterName();
+                    if ($details['field'] == 'order_origin') {
+                        $column = $alias . '.origin';
+                    }
+                    if ($details['field'] == 'order_no') {
+                        $column = $alias . '.order_no';
+                    }
+                    if ($details['field'] == 'order_time') {
+                        $column = $alias . '.order_time';;
+                    }
+                    if ($details['field'] == 'order_price') {
+                        $column = $alias . '.total_fee';;
+                    }
+                    if ($details['field'] == 'order_product_type') {
+                        $column = $alias2 . '.product_type';;
+                    }
+
+                    $subqb = $this->_em->getConnection()
+                        ->createQueryBuilder()
+                        ->select($alias . '.id')
+                        ->from(MAUTIC_TABLE_PREFIX . 'lead_order', $alias)
+                        ->leftJoin($alias, MAUTIC_TABLE_PREFIX . 'lead_order_line', $alias2, $alias . '.id = ' . $alias2 . '.lead_order_id');
+                    switch ($func) {
+                        case 'eq':
+                        case 'neq':
+                            $subqb->where(
+                                $q->expr()->andX(
+                                    $q->expr()->eq($column, $q->expr()->literal($details['filter'])),
+                                    $q->expr()->eq($alias . '.contact_id', 'l.id')
+                                )
+                            );
+                            break;
+                        case 'like':
+                        case '!like':
+                            $subqb->where(
+                                $q->expr()->andX(
+                                    $q->expr()->like($column, '%' . $details['filter'] . '%'),
+                                    $q->expr()->eq($alias . '.contact_id', 'l.id')
+                                )
+                            );
+                            break;
+                        case 'regexp':
+                        case 'notRegexp':
+                            $not = ($func === 'notRegexp') ? ' NOT' : '';
+                            $subqb->where(
+                                $q->expr()->andX(
+                                    $q->expr()->eq($alias . '.contact_id', 'l.id'),
+                                    $alias . '.' . $column . $not . ' REGEXP ' . $details['filter']
+                                )
+                            );
+                            break;
+                    }
+                    $groupExpr->add(sprintf('%s (%s)', $operand, $subqb->getSQL()));
+                    break;
+                case 'submit_form':
+                    $operand = ($func == 'in') ? 'EXISTS' : 'NOT EXISTS';
+                    $subqb = $this->_em->getConnection()
+                        ->createQueryBuilder()
+                        ->select($alias . '.id')
+                        ->from(MAUTIC_TABLE_PREFIX . 'form_submissions', $alias)
+                        ->where($alias . ".lead_id = l.id")
+                    ;
+
+                    if (!empty($details['filter'])) {
+                        $subqb->andWhere($alias . '.form_id IN (' . implode(',', $details['filter']) . ')');
+                    }
+
+                    // Specific lead
+                    if (!empty($leadId)) {
+                        $subqb->andWhere($subqb->expr()
+                            ->eq($alias . '.lead_id', $leadId));
+                    }
+                    $groupExpr->add(sprintf('%s (%s)', $operand, $subqb->getSQL()));
+                    break;
+                case 'visit_page':
+                    $operand = ($func == 'in') ? 'EXISTS' : 'NOT EXISTS';
+                    $subqb = $this->_em->getConnection()
+                        ->createQueryBuilder()
+                        ->select($alias . '.id')
+                        ->from(MAUTIC_TABLE_PREFIX . 'page_hits', $alias)
+                        ->where($alias . ".lead_id = l.id")
+                        ->andWhere($alias . ".lead_id is not null")
+                    ;
+
+                    if (!empty($details['filter'])) {
+                        $subqb->andWhere($alias . '.page_id IN (' . implode(',', $details['filter']) . ')');
+                    }
+
+                    // Specific lead
+                    if (!empty($leadId)) {
+                        $subqb->andWhere($subqb->expr()
+                            ->eq($alias . '.lead_id', $leadId));
+                    }
+                    $groupExpr->add(sprintf('%s (%s)', $operand, $subqb->getSQL()));
+                    break;
+                case 'email_id':
+                    $operand = ($func == 'in') ? 'EXISTS' : 'NOT EXISTS';
+                    $subqb = $this->_em->getConnection()
+                        ->createQueryBuilder()
+                        ->select($alias . '.id')
+                        ->from(MAUTIC_TABLE_PREFIX . 'page_hits', $alias)
+                        ->where($alias . ".lead_id = l.id")
+                        ->andWhere($alias . ".source = 'email'")
+                        ->andWhere($alias . ".lead_id is not null")
+                    ;
+
+                    if (!empty($details['filter'])) {
+                        $subqb->andWhere($alias . '.source_id IN (' . implode(',', $details['filter']) . ')');
+                    }
+
+                    // Specific lead
+                    if (!empty($leadId)) {
+                        $subqb->andWhere($subqb->expr()
+                            ->eq($alias . '.lead_id', $leadId));
+                    }
+                    $groupExpr->add(sprintf('%s (%s)', $operand, $subqb->getSQL()));
+                    break;
+                case 'sms_id':
+                    $operand = ($func == 'in') ? 'EXISTS' : 'NOT EXISTS';
+                    $subqb = $this->_em->getConnection()
+                        ->createQueryBuilder()
+                        ->select($alias . '.id')
+                        ->from(MAUTIC_TABLE_PREFIX . 'page_hits', $alias)
+                        ->where($alias . ".lead_id = l.id")
+                        ->andWhere($alias . ".source = 'sms'")
+                        ->andWhere($alias . ".lead_id is not null")
+                    ;
+
+                    if (!empty($details['filter'])) {
+                        $subqb->andWhere($alias . '.source_id IN (' . implode(',', $details['filter']) . ')');
+                    }
+
+                    // Specific lead
+                    if (!empty($leadId)) {
+                        $subqb->andWhere($subqb->expr()
+                            ->eq($alias . '.lead_id', $leadId));
+                    }
+                    $groupExpr->add(sprintf('%s (%s)', $operand, $subqb->getSQL()));
+                    break;
+                case 'lead_sms_sent':
+                    $operand = ($func == 'in') ? 'EXISTS' : 'NOT EXISTS';
+                    $table = 'sms_message_stats';
+                    $select = 'id';
+
+                    $subqb = $this->_em->getConnection()
+                        ->createQueryBuilder()
+                        ->select($select)
+                        ->from(MAUTIC_TABLE_PREFIX . $table, $alias)
+                        ->andWhere($alias . ".lead_id = l.id");
+
+                    if (!empty($details['filter'])) {
+                        $subqb->andWhere($alias . '.sms_id IN (' . implode(',', $details['filter']) . ')');
+                    }
+
+                    // Specific lead
+                    if (!empty($leadId)) {
+                        $subqb->andWhere($subqb->expr()
+                            ->eq($alias . '.lead_id', $leadId));
+                    }
+                    $groupExpr->add(sprintf('%s (%s)', $operand, $subqb->getSQL()));
                     break;
                 default:
                     if (!$column) {
@@ -1344,11 +1640,11 @@ class LeadListRepository extends CommonRepository
                         case 'between':
                         case 'notBetween':
                             // Filter should be saved with double || to separate options
-                            $parameter2              = $this->generateRandomParameterName();
-                            $parameters[$parameter]  = $details['filter'][0];
+                            $parameter2 = $this->generateRandomParameterName();
+                            $parameters[$parameter] = $details['filter'][0];
                             $parameters[$parameter2] = $details['filter'][1];
-                            $exprParameter2          = ":$parameter2";
-                            $ignoreAutoFilter        = true;
+                            $exprParameter2 = ":$parameter2";
+                            $ignoreAutoFilter = true;
 
                             if ($func == 'between') {
                                 $groupExpr->add(
@@ -1406,7 +1702,7 @@ class LeadListRepository extends CommonRepository
                         case 'like':
                         case 'notLike':
                             if (strpos($details['filter'], '%') === false) {
-                                $details['filter'] = '%'.$details['filter'].'%';
+                                $details['filter'] = '%' . $details['filter'] . '%';
                             }
 
                             $groupExpr->add(
@@ -1415,11 +1711,11 @@ class LeadListRepository extends CommonRepository
                             break;
                         case 'regexp':
                         case 'notRegexp':
-                            $ignoreAutoFilter       = true;
+                            $ignoreAutoFilter = true;
                             $parameters[$parameter] = $details['filter'];
-                            $not                    = ($func === 'notRegexp') ? ' NOT' : '';
+                            $not = ($func === 'notRegexp') ? ' NOT' : '';
                             $groupExpr->add(
-                                $field.$not.' REGEXP '.$exprParameter
+                                $field . $not . ' REGEXP ' . $exprParameter
                             );
                             break;
                         default:
@@ -1431,11 +1727,11 @@ class LeadListRepository extends CommonRepository
                 if (!is_array($details['filter'])) {
                     switch ($details['type']) {
                         case 'number':
-                            $details['filter'] = (float) $details['filter'];
+                            $details['filter'] = (float)$details['filter'];
                             break;
 
                         case 'boolean':
-                            $details['filter'] = (bool) $details['filter'];
+                            $details['filter'] = (bool)$details['filter'];
                             break;
                     }
                 }
@@ -1512,8 +1808,8 @@ class LeadListRepository extends CommonRepository
             return [$expr, $parameters];
         }
 
-        $command         = $filter->command;
-        $unique          = $this->generateRandomParameterName();
+        $command = $filter->command;
+        $unique = $this->generateRandomParameterName();
         $returnParameter = false; //returning a parameter that is not used will lead to a Doctrine error
 
         switch ($command) {
@@ -1523,22 +1819,22 @@ class LeadListRepository extends CommonRepository
                 break;
             case $this->translator->trans('mautic.lead.list.searchcommand.isglobal'):
             case $this->translator->trans('mautic.lead.list.searchcommand.isglobal', [], null, 'en_US'):
-                $expr            = $q->expr()->eq('l.isGlobal', ":$unique");
+                $expr = $q->expr()->eq('l.isGlobal', ":$unique");
                 $forceParameters = [$unique => true];
                 break;
             case $this->translator->trans('mautic.core.searchcommand.ispublished'):
             case $this->translator->trans('mautic.core.searchcommand.ispublished', [], null, 'en_US'):
-                $expr            = $q->expr()->eq('l.isPublished', ":$unique");
+                $expr = $q->expr()->eq('l.isPublished', ":$unique");
                 $forceParameters = [$unique => true];
                 break;
             case $this->translator->trans('mautic.core.searchcommand.isunpublished'):
             case $this->translator->trans('mautic.core.searchcommand.isunpublished', [], null, 'en_US'):
-                $expr            = $q->expr()->eq('l.isPublished', ":$unique");
+                $expr = $q->expr()->eq('l.isPublished', ":$unique");
                 $forceParameters = [$unique => false];
                 break;
             case $this->translator->trans('mautic.core.searchcommand.name'):
             case $this->translator->trans('mautic.core.searchcommand.name', [], null, 'en_US'):
-                $expr            = $q->expr()->like('l.name', ':'.$unique);
+                $expr = $q->expr()->like('l.name', ':' . $unique);
                 $returnParameter = true;
                 break;
         }
@@ -1546,7 +1842,7 @@ class LeadListRepository extends CommonRepository
         if (!empty($forceParameters)) {
             $parameters = $forceParameters;
         } elseif ($returnParameter) {
-            $string     = ($filter->strict) ? $filter->string : "%{$filter->string}%";
+            $string = ($filter->strict) ? $filter->string : "%{$filter->string}%";
             $parameters = ["$unique" => $string];
         }
 
@@ -1637,10 +1933,10 @@ class LeadListRepository extends CommonRepository
     {
         $joinType = ($this->listFiltersInnerJoinCompany) ? 'join' : 'leftJoin';
         // Join company tables for query optimization
-        $q->$joinType('l', MAUTIC_TABLE_PREFIX.'companies_leads', 'cl', 'l.id = cl.lead_id')
+        $q->$joinType('l', MAUTIC_TABLE_PREFIX . 'companies_leads', 'cl', 'l.id = cl.lead_id')
             ->$joinType(
                 'cl',
-                MAUTIC_TABLE_PREFIX.'companies',
+                MAUTIC_TABLE_PREFIX . 'companies',
                 'comp',
                 'cl.company_id = comp.id'
             )

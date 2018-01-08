@@ -112,20 +112,10 @@ class UserType extends AbstractType
         );
 
         $builder->add(
-            'firstName',
-            'text',
-            [
-                'label'      => 'mautic.core.firstname',
-                'label_attr' => ['class' => 'control-label'],
-                'attr'       => ['class' => 'form-control'],
-            ]
-        );
-
-        $builder->add(
             'lastName',
             'text',
             [
-                'label'      => 'mautic.core.lastname',
+                'label'      => 'mautic.core.name',
                 'label_attr' => ['class' => 'control-label'],
                 'attr'       => ['class' => 'form-control'],
             ]

@@ -41,10 +41,10 @@ trait FilterTrait
 
         $field = [];
 
-        if (isset($options['fields']['lead'][$fieldName])) {
-            $field = $options['fields']['lead'][$fieldName];
-        } elseif (isset($options['fields']['company'][$fieldName])) {
-            $field = $options['fields']['company'][$fieldName];
+        $fields = array_merge($options['fields']['lead'], $options['fields']['weixin'], $options['fields']['email'], $options['fields']['sms'], $options['fields']['page'], $options['fields']['order']);
+
+        if (isset($fields[$fieldName])) {
+            $field = $fields[$fieldName];
         }
 
         $customOptions = [];
@@ -96,6 +96,50 @@ trait FilterTrait
                         'onchange'             => 'Mautic.createLeadTag(this)',
                     ]
                 );
+                $type = 'choice';
+                break;
+            case 'weixin':
+                if (!isset($data['filter'])) {
+                    $data['filter'] = [];
+                } elseif (!is_array($data['filter'])) {
+                    $data['filter'] = [$data['filter']];
+                }
+                $customOptions['choices']                   = $options['weixin'];
+                $customOptions['multiple']                  = true;
+                $customOptions['choice_translation_domain'] = false;
+                $type = 'choice';
+                break;
+            case 'sms':
+                if (!isset($data['filter'])) {
+                    $data['filter'] = [];
+                } elseif (!is_array($data['filter'])) {
+                    $data['filter'] = [$data['filter']];
+                }
+                $customOptions['choices']                   = $options['sms'];
+                $customOptions['multiple']                  = true;
+                $customOptions['choice_translation_domain'] = false;
+                $type = 'choice';
+                break;
+            case 'forms':
+                if (!isset($data['filter'])) {
+                    $data['filter'] = [];
+                } elseif (!is_array($data['filter'])) {
+                    $data['filter'] = [$data['filter']];
+                }
+                $customOptions['choices']                   = $options['forms'];
+                $customOptions['multiple']                  = true;
+                $customOptions['choice_translation_domain'] = false;
+                $type = 'choice';
+                break;
+            case 'page':
+                if (!isset($data['filter'])) {
+                    $data['filter'] = [];
+                } elseif (!is_array($data['filter'])) {
+                    $data['filter'] = [$data['filter']];
+                }
+                $customOptions['choices']                   = $options['page'];
+                $customOptions['multiple']                  = true;
+                $customOptions['choice_translation_domain'] = false;
                 $type = 'choice';
                 break;
             case 'stage':

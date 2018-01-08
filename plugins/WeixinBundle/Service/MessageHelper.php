@@ -14,38 +14,31 @@ use MauticPlugin\WeixinBundle\Entity\Weixin;
 
 class MessageHelper
 {
+    private $weixinApi;
     private $rootDir;
 
-    public function __construct($rootDir)
+    public function __construct(Api $weixinApi, $rootDir)
     {
+        $this->weixinApi = $weixinApi;
         $this->rootDir = $rootDir;
     }
 
-    public function handleMessageImage(Message $message, $file)
+    public function handleMessageImage(Weixin $weixin, Message $message, $file)
     {
-        if (in_array($message->getMsgType(), [Message::MSG_TYPE_IMG, Message::MSG_TYPE_IMGTEXT])) {
+        if ($file && in_array($message->getMsgType(), [Message::MSG_TYPE_IMG, Message::MSG_TYPE_IMGTEXT])) {
+
+            $result = $this->weixinApi->uploadImage($weixin, $file);
+            $message->setImageId($result['media_id']);
+            $message->setImageUrl($result['url']);
+
             $fileName = md5(uniqid()) . '.' . $file->guessExtension();
+
             $file->move(
                 $this->rootDir . '/../uploads',
                 $fileName
             );
+
             $message->setImage('uploads/' . $fileName);
-        }
-    }
-
-    public function getMessageRes(Weixin $weixin, $msg)
-    {
-        foreach ($weixin->getRules() as $rule)
-        {
-            foreach ($rule->getKeywords() as $keyword) {
-                if($keyword->getType() == Rule::RULE_TYPE_COMPLET && $keyword->getKeyword() == $msg) {
-                    return $keyword->getMessage();
-                }
-
-                if($keyword->getType() == Rule::RULE_TYPE_LIKE && strpos($msg, $keyword->getKeyword()) !== false) {
-                    return $keyword->getMessage();
-                }
-            }
         }
     }
 }

@@ -56,28 +56,32 @@ class SendcloudTransport extends \Swift_SmtpTransport  implements InterfaceCallb
         $logger->debug('Receiving webhook from SendCloudEmail');
 
         $data = $request->request->all();
-        $file_name = time() . ".txt";
+//
+//        $file_name = time() . ".txt";
+//        file_put_contents($file_name,json_encode($data));
+        if (isset($data['recipientArray'])) {
+            $to = $data['recipientArray'];
+            $match = [];
+            preg_match('/^\[\'(.*)\'\]/', $to, $match);
+            $to = $match[1];
+            $rows     = [];
+            $email    = $to;
+            $status   = $data['event'];
+            // https://elasticemail.com/support/delivery/http-web-notification
+            if (in_array($status, ['report_spam', 'unsubscribe'])) {
+                $rows[DoNotContact::UNSUBSCRIBED]['emails'][$email] = $status;
+            } elseif (in_array($status, ['invalid', 'bounce'])) {
+                // just hard bounces https://elasticemail.com/support/user-interface/activity/bounced-category-filters
+                $rows[DoNotContact::BOUNCED]['emails'][$email] = $status;
+            } elseif ($status == 'error') {
+                $rows[DoNotContact::BOUNCED]['emails'][$email] = $translator->trans('mautic.email.complaint.reason.unknown');
+            }
 
 
-
-        $to = $data['recipientArray'];
-        $match = [];
-        preg_match('/^\[\'(.*)\'\]/', $to, $match);
-        $to = $match[1];
-        $rows     = [];
-        $email    = $to;
-        $status   = $data['event'];
-        // https://elasticemail.com/support/delivery/http-web-notification
-        if (in_array($status, ['report_spam', 'unsubscribe'])) {
-            $rows[DoNotContact::UNSUBSCRIBED]['emails'][$email] = $status;
-        } elseif (in_array($status, ['invalid', 'bounce'])) {
-            // just hard bounces https://elasticemail.com/support/user-interface/activity/bounced-category-filters
-            $rows[DoNotContact::BOUNCED]['emails'][$email] = $status;
-        } elseif ($status == 'error') {
-            $rows[DoNotContact::BOUNCED]['emails'][$email] = $translator->trans('mautic.email.complaint.reason.unknown');
+            return $rows;
         }
+        //$file_name = time() . ".txt";
+        //file_put_contents($file_name,json_encode($data));
 
-
-        return $rows;
     }
 }

@@ -58,7 +58,7 @@ $img = $view['lead_avatar']->getAvatar($contact);
                         ?>
                     </div>
                     <div class="text-muted mb-1 ellipsis">
-                        <i class="fa fa-fw fa-globe mr-xs"></i><?php echo $fields['core']['country']['value']; ?>
+<!--                        <i class="fa fa-fw fa-globe mr-xs"></i>--><?php //echo $fields['core']['country']['value']; ?>
                     </div>
                     <?php $flag = (!empty($fields['core']['country'])) ? $view['assets']->getCountryFlag($fields['core']['country']['value']) : ''; ?>
 

@@ -34,6 +34,14 @@ if ($permissions['lead:leads:create']) {
         'iconClass' => 'fa fa-upload',
         'btnText'   => 'mautic.lead.lead.import',
     ];
+
+    $pageButtons[] = [
+        'attr' => [
+            'href' => $view['router']->path('mautic_import_order_action'),
+        ],
+        'iconClass' => 'fa fa-upload',
+        'btnText'   => 'mautic.lead.order.import',
+    ];
 }
 
 // Only show toggle buttons for accessibility

@@ -35,6 +35,7 @@ class UserMapper implements UsernameMapperInterface
     }
 
     /**
+     * 获取用户名
      * @param Response $response
      *
      * @return string|null

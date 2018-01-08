@@ -47,7 +47,7 @@ if ($tmpl == 'index') {
                     [
                         'sessionVar' => 'page',
                         'orderBy'    => 'c.title',
-                        'text'       => 'mautic.core.category',
+                        'text'       => 'mautic.page.thead.qrcode',
                         'class'      => 'visible-md visible-lg col-page-category',
                     ]
                 );
@@ -57,7 +57,27 @@ if ($tmpl == 'index') {
                     [
                         'sessionVar' => 'page',
                         'orderBy'    => 'p.hits',
-                        'text'       => 'mautic.page.thead.hits',
+                        'text'       => 'mautic.page.thead.nhits',
+                        'class'      => 'col-page-hits visible-md visible-lg',
+                    ]
+                );
+
+                echo $view->render(
+                    'MauticCoreBundle:Helper:tableheader.html.php',
+                    [
+                        'sessionVar' => 'page',
+                        'orderBy'    => 'p.hits',
+                        'text'       => 'mautic.page.thead.submits',
+                        'class'      => 'col-page-hits visible-md visible-lg',
+                    ]
+                );
+
+                echo $view->render(
+                    'MauticCoreBundle:Helper:tableheader.html.php',
+                    [
+                        'sessionVar' => 'page',
+                        'orderBy'    => 'p.hits',
+                        'text'       => 'mautic.page.thead.submitRate',
                         'class'      => 'col-page-hits visible-md visible-lg',
                     ]
                 );
@@ -132,12 +152,14 @@ if ($tmpl == 'index') {
                         </a>
                     </td>
                     <td class="visible-md visible-lg">
-                        <?php $category = $item->getCategory(); ?>
-                        <?php $catName  = ($category) ? $category->getTitle() : $view['translator']->trans('mautic.core.form.uncategorized'); ?>
-                        <?php $color    = ($category) ? '#'.$category->getColor() : 'inherit'; ?>
-                        <span style="white-space: nowrap;"><span class="label label-default pa-4" style="border: 1px solid #d5d5d5; background: <?php echo $color; ?>;"> </span> <span><?php echo $catName; ?></span></span>
+                        <a href="<?php echo $view['router']->path('mautic_page_qrcode',['id' => $item->getId()]); ?>">
+                        <?php $url = $model->generateUrl($item, true); ?>
+                        <?php $qrCode = new \Endroid\QrCode\QrCode($url); echo '<img style="max-height:80px;" src="'.$qrCode->writeDataUri().'">'?>
+                        </a>
                     </td>
-                    <td class="visible-md visible-lg"><?php echo $item->getHits(); ?></td>
+                    <td class="visible-md visible-lg"><?php echo  $item->getHits(). '/' . $item->getUniqueHits(); ?></td>
+                    <td class="visible-md visible-lg"><?php echo  $item->getSubmits(). '/' . $item->getUniqueSubmits(); ?></td>
+                    <td class="visible-md visible-lg"><?php echo $item->getUniqueHits() == 0 ? 0 : number_format($item->getUniqueSubmits() / $item->getUniqueHits() * 100, 2).'%' ?></td>
                     <td class="visible-md visible-lg"><?php echo $item->getId(); ?></td>
                 </tr>
             <?php endforeach; ?>

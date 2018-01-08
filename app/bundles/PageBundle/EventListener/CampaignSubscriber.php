@@ -13,11 +13,13 @@ namespace Mautic\PageBundle\EventListener;
 
 use Mautic\CampaignBundle\CampaignEvents;
 use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
+use Mautic\CampaignBundle\Event\CampaignDecisionEvent;
 use Mautic\CampaignBundle\Event\CampaignExecutionEvent;
 use Mautic\CampaignBundle\Model\EventModel;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use Mautic\PageBundle\Entity\Page;
 use Mautic\PageBundle\Event\PageHitEvent;
+use Mautic\PageBundle\Form\Type\CampaignEventPageType;
 use Mautic\PageBundle\Model\PageModel;
 use Mautic\PageBundle\PageEvents;
 
@@ -57,6 +59,7 @@ class CampaignSubscriber extends CommonSubscriber
             CampaignEvents::CAMPAIGN_ON_BUILD        => ['onCampaignBuild', 0],
             PageEvents::PAGE_ON_HIT                  => ['onPageHit', 0],
             PageEvents::ON_CAMPAIGN_TRIGGER_DECISION => ['onCampaignTriggerDecision', 0],
+            CampaignEvents::ON_EVENT_DECISION_TRIGGER => ['onCampaignPageTriggerDecision', 0]
         ];
     }
 
@@ -77,6 +80,17 @@ class CampaignSubscriber extends CommonSubscriber
             'channelIdField' => 'pages',
         ];
         $event->addDecision('page.pagehit', $pageHitTrigger);
+
+        $event->addDecision(
+            'page.event',
+            [
+                'label' => 'mautic.page.campaign.event',
+                'description' => 'mautic.page.campaign.event_descr',
+                'eventName' => CampaignEvents::ON_EVENT_DECISION_TRIGGER,
+                'formType' => 'campaignevent_page',
+            ]
+        );
+
     }
 
     /**
@@ -169,5 +183,35 @@ class CampaignSubscriber extends CommonSubscriber
         }
 
         return $event->setResult(false);
+    }
+
+    public function onCampaignPageTriggerDecision(CampaignDecisionEvent $event)
+    {
+        $event = current(current($event->getEvents()));
+
+        $pageids = $event['properties']['properties']['pages'];
+        $type = $event['properties']['properties']['type'];
+        $lead = $event->getLead();
+
+        $pageRepo = $this->em->getRepository('Mautic\PageBundle\Entity\Page');
+
+        switch ($type) {
+            case CampaignEventPageType::VISIT:
+                foreach ($pageids as $pageid) {
+                    $pageStatis = $this->pageModel->getPageStatByLeadId($pageid, $lead->getId());
+                    foreach ($pageStatis as $pageStati) {
+                        return $event->setDecisionAlreadyTriggered(true);
+                    }
+                }
+                return $event->setDecisionAlreadyTriggered(false);
+            case CampaignEventPageType::CLICK:
+                foreach ($pageids as $pageid) {
+                    $clicks = $this->pageModel->getPageClickStats($pageid);
+                    if(count($clicks)) {
+                        return $event->setDecisionAlreadyTriggered(true);
+                    }
+                }
+                return $event->setDecisionAlreadyTriggered(false);
+        }
     }
 }

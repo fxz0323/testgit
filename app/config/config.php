@@ -182,7 +182,7 @@ $container->loadFromExtension('framework', [
     'default_locale' => '%mautic.locale%',
     'translator'     => [
         'enabled'  => true,
-        'fallback' => 'en_US',
+        'fallback' => 'en_US',//默认语言为英语
     ],
     'trusted_hosts'   => '%mautic.trusted_hosts%',
     'trusted_proxies' => '%mautic.trusted_proxies%',

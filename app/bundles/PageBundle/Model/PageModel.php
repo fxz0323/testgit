@@ -89,14 +89,16 @@ class PageModel extends FormModel
      */
     protected $pageTrackableModel;
 
+    private $pointModel;
+
     /**
      * PageModel constructor.
      *
-     * @param CookieHelper   $cookieHelper
+     * @param CookieHelper $cookieHelper
      * @param IpLookupHelper $ipLookupHelper
-     * @param LeadModel      $leadModel
-     * @param FieldModel     $leadFieldModel
-     * @param RedirectModel  $pageRedirectModel
+     * @param LeadModel $leadModel
+     * @param FieldModel $leadFieldModel
+     * @param RedirectModel $pageRedirectModel
      * @param TrackableModel $pageTrackableModel
      */
     public function __construct(
@@ -105,15 +107,18 @@ class PageModel extends FormModel
         LeadModel $leadModel,
         FieldModel $leadFieldModel,
         RedirectModel $pageRedirectModel,
-        TrackableModel $pageTrackableModel
-    ) {
-        $this->cookieHelper       = $cookieHelper;
-        $this->ipLookupHelper     = $ipLookupHelper;
-        $this->leadModel          = $leadModel;
-        $this->leadFieldModel     = $leadFieldModel;
-        $this->pageRedirectModel  = $pageRedirectModel;
+        TrackableModel $pageTrackableModel,
+        $pointModel
+    )
+    {
+        $this->cookieHelper = $cookieHelper;
+        $this->ipLookupHelper = $ipLookupHelper;
+        $this->leadModel = $leadModel;
+        $this->leadFieldModel = $leadFieldModel;
+        $this->pageRedirectModel = $pageRedirectModel;
         $this->pageTrackableModel = $pageTrackableModel;
-        $this->dateTimeHelper     = new DateTimeHelper();
+        $this->dateTimeHelper = new DateTimeHelper();
+        $this->pointModel = $pointModel;
     }
 
     /**
@@ -185,14 +190,14 @@ class PageModel extends FormModel
             $alias = $this->cleanAlias($alias, '', false, '-');
 
             //make sure alias is not already taken
-            $repo      = $this->getRepository();
+            $repo = $this->getRepository();
             $testAlias = $alias;
-            $count     = $repo->checkPageUniqueAlias($testAlias, $pageIds);
-            $aliasTag  = 1;
+            $count = $repo->checkPageUniqueAlias($testAlias, $pageIds);
+            $aliasTag = 1;
 
             while ($count) {
-                $testAlias = $alias.$aliasTag;
-                $count     = $repo->checkPageUniqueAlias($testAlias, $pageIds);
+                $testAlias = $alias . $aliasTag;
+                $count = $repo->checkPageUniqueAlias($testAlias, $pageIds);
                 ++$aliasTag;
             }
             if ($testAlias != $alias) {
@@ -212,7 +217,7 @@ class PageModel extends FormModel
 
         // Reset a/b test if applicable
         $variantStartDate = new \DateTime();
-        $resetVariants    = $this->preVariantSaveEntity($entity, ['setVariantHits'], $variantStartDate);
+        $resetVariants = $this->preVariantSaveEntity($entity, ['setVariantHits'], $variantStartDate);
 
         parent::saveEntity($entity, $unlock);
 
@@ -265,7 +270,7 @@ class PageModel extends FormModel
     {
         if ($id === null) {
             $entity = new Page();
-            $entity->setSessionId('new_'.hash('sha1', uniqid(mt_rand())));
+            $entity->setSessionId('new_' . hash('sha1', uniqid(mt_rand())));
         } else {
             $entity = parent::getEntity($id);
             if ($entity !== null) {
@@ -323,7 +328,7 @@ class PageModel extends FormModel
      *
      * @param string $type
      * @param string $filter
-     * @param int    $limit
+     * @param int $limit
      *
      * @return array
      */
@@ -333,7 +338,7 @@ class PageModel extends FormModel
         switch ($type) {
             case 'page':
                 $viewOther = $this->security->isGranted('page:pages:viewother');
-                $repo      = $this->getRepository();
+                $repo = $this->getRepository();
                 $repo->setCurrentUser($this->userHelper->getUser());
                 $results = $repo->getPageList($filter, $limit, 0, $viewOther);
                 break;
@@ -345,8 +350,8 @@ class PageModel extends FormModel
     /**
      * Generate URL for a page.
      *
-     * @param Page  $entity
-     * @param bool  $absolute
+     * @param Page $entity
+     * @param bool $absolute
      * @param array $clickthrough
      *
      * @return string
@@ -378,12 +383,12 @@ class PageModel extends FormModel
         //should the url include the category
         if ($this->catInUrl) {
             $category = $entity->getCategory();
-            $catSlug  = (!empty($category)) ? $category->getAlias() :
+            $catSlug = (!empty($category)) ? $category->getAlias() :
                 $this->translator->trans('mautic.core.url.uncategorized');
         }
 
         $parent = $entity->getTranslationParent();
-        $slugs  = [];
+        $slugs = [];
         if ($parent) {
             //multiple languages so tack on the language
             $slugs[] = $entity->getLanguage();
@@ -405,10 +410,10 @@ class PageModel extends FormModel
      * Record page hit.
      *
      * @param           $page
-     * @param Request   $request
-     * @param string    $code
+     * @param Request $request
+     * @param string $code
      * @param Lead|null $lead
-     * @param array     $query
+     * @param array $query
      *
      * @return Hit $hit
      *
@@ -431,6 +436,12 @@ class PageModel extends FormModel
 
         // Check for existing IP
         $ipAddress = $this->ipLookupHelper->getIpAddress();
+
+        if($ipAddress && !$ipAddress->isTrackable()) {
+            file_put_contents('/tmp/test.log', date('Y-m-d H:i:s') . ':' . 'hitpage(not track): ' . $ipAddress->getIpAddress() . PHP_EOL, FILE_APPEND);
+            return;
+        }
+
         $hit->setIpAddress($ipAddress);
 
         // Check for any clickthrough info
@@ -444,10 +455,10 @@ class PageModel extends FormModel
             if (!empty($clickthrough['channel'])) {
                 if (count($clickthrough['channel']) === 1) {
                     $channelId = reset($clickthrough['channel']);
-                    $channel   = key($clickthrough['channel']);
+                    $channel = key($clickthrough['channel']);
                 } else {
-                    $channel   = $clickthrough['channel'][0];
-                    $channelId = (int) $clickthrough['channel'][1];
+                    $channel = $clickthrough['channel'][0];
+                    $channelId = (int)$clickthrough['channel'][1];
                 }
                 $hit->setSource($channel);
                 $hit->setSourceId($channelId);
@@ -539,8 +550,15 @@ class PageModel extends FormModel
                     // If this is a trackable, up the trackable counts as well
                     if (!empty($clickthrough['channel'])) {
                         $channelId = reset($clickthrough['channel']);
-                        $channel   = key($clickthrough['channel']);
+                        $channel = key($clickthrough['channel']);
+                        file_put_contents('/tmp/test.log', date('Y-m-d H:i:s') . ':' . 'hitpage: ' . $channelId . ':' . $channel . PHP_EOL, FILE_APPEND);
+                        if ($channelId === 'sms') {
+                            $this->pointModel->triggerAction('sms.url');
+                        }
 
+                        if ($channel === 'email') {
+                            $this->pointModel->triggerAction('email.url');
+                        }
                         $this->pageTrackableModel->getRepository()->upHitCount($page->getId(), $channel, $channelId, 1, $isUnique);
                     }
                 } catch (\Exception $exception) {
@@ -637,7 +655,7 @@ class PageModel extends FormModel
         $dd->parse();
 
         $deviceRepo = $this->leadModel->getDeviceRepository();
-        $device     = $deviceRepo->getDevice($lead, $dd->getDeviceName(), $dd->getBrand(), $dd->getModel());
+        $device = $deviceRepo->getDevice($lead, $dd->getDeviceName(), $dd->getBrand(), $dd->getModel());
         if (empty($device)) {
             $device = new LeadDevice();
             $device->setClientInfo($dd->getClient());
@@ -690,7 +708,7 @@ class PageModel extends FormModel
     }
 
     /**
-     * @param Request            $request
+     * @param Request $request
      * @param null|Redirect|Page $page
      *
      * @return array
@@ -711,7 +729,7 @@ class PageModel extends FormModel
                     $isPageEvent = true;
                 }
             } elseif (strpos($request->server->get('REQUEST_URI'), $this->router->generate('mautic_page_tracker_cors')) !== false) {
-                $query       = $request->request->all();
+                $query = $request->request->all();
                 $isPageEvent = true;
             }
 
@@ -725,7 +743,7 @@ class PageModel extends FormModel
                     $decoded = false;
                     if (isset($query['d'])) {
                         // parse_str auto urldecodes
-                        $query   = $this->decodeArrayFromUrl($query['d'], false);
+                        $query = $this->decodeArrayFromUrl($query['d'], false);
                         $decoded = true;
                     }
 
@@ -769,10 +787,10 @@ class PageModel extends FormModel
                 }
                 $pageURL .= '://';
                 if ($request->server->get('SERVER_PORT') != '80') {
-                    $pageURL .= $request->server->get('SERVER_NAME').':'.$request->server->get('SERVER_PORT').
+                    $pageURL .= $request->server->get('SERVER_NAME') . ':' . $request->server->get('SERVER_PORT') .
                         $request->server->get('REQUEST_URI');
                 } else {
-                    $pageURL .= $request->server->get('SERVER_NAME').$request->server->get('REQUEST_URI');
+                    $pageURL .= $request->server->get('SERVER_NAME') . $request->server->get('REQUEST_URI');
                 }
             }
         }
@@ -795,9 +813,9 @@ class PageModel extends FormModel
     /**
      * Get array of page builder tokens from bundles subscribed PageEvents::PAGE_ON_BUILD.
      *
-     * @param null|Page    $page
+     * @param null|Page $page
      * @param array|string $requestedComponents all | tokens | abTestWinnerCriteria
-     * @param null|string  $tokenFilter
+     * @param null|string $tokenFilter
      *
      * @return array
      */
@@ -812,7 +830,7 @@ class PageModel extends FormModel
     /**
      * Get number of page bounces.
      *
-     * @param Page      $page
+     * @param Page $page
      * @param \DateTime $fromDate
      *
      * @return int
@@ -829,7 +847,7 @@ class PageModel extends FormModel
      */
     public function limitQueryToCreator(QueryBuilder &$q)
     {
-        $q->join('t', MAUTIC_TABLE_PREFIX.'pages', 'p', 'p.id = t.page_id')
+        $q->join('t', MAUTIC_TABLE_PREFIX . 'pages', 'p', 'p.id = t.page_id')
             ->andWhere('p.created_by = :userId')
             ->setParameter('userId', $this->userHelper->getUser()->getId());
     }
@@ -837,12 +855,12 @@ class PageModel extends FormModel
     /**
      * Get line chart data of hits.
      *
-     * @param char      $unit          {@link php.net/manual/en/function.date.php#refsect1-function.date-parameters}
+     * @param char $unit {@link php.net/manual/en/function.date.php#refsect1-function.date-parameters}
      * @param \DateTime $dateFrom
      * @param \DateTime $dateTo
-     * @param string    $dateFormat
-     * @param array     $filter
-     * @param bool      $canViewOthers
+     * @param string $dateFormat
+     * @param array $filter
+     * @param bool $canViewOthers
      *
      * @return array
      */
@@ -890,16 +908,16 @@ class PageModel extends FormModel
      *
      * @param \DateTime $dateFrom
      * @param \DateTime $dateTo
-     * @param array     $filters
-     * @param bool      $canViewOthers
+     * @param array $filters
+     * @param bool $canViewOthers
      *
      * @return array
      */
     public function getNewVsReturningPieChartData($dateFrom, $dateTo, $filters = [], $canViewOthers = true)
     {
-        $chart              = new PieChart();
-        $query              = new ChartQuery($this->em->getConnection(), $dateFrom, $dateTo);
-        $allQ               = $query->getCountQuery('page_hits', 'id', 'date_hit', $filters);
+        $chart = new PieChart();
+        $query = new ChartQuery($this->em->getConnection(), $dateFrom, $dateTo);
+        $allQ = $query->getCountQuery('page_hits', 'id', 'date_hit', $filters);
         $filters['lead_id'] = [
             'expression' => 'isNull',
         ];
@@ -913,7 +931,7 @@ class PageModel extends FormModel
         $all = $query->fetchCount($allQ);
 //        $unique    = $query->fetchCount($uniqueQ);
         $returning = $query->fetchCount($returnQ);
-        $unique    = $all - $returning;
+        $unique = $all - $returning;
         $chart->setDataset($this->translator->trans('mautic.page.unique'), $unique);
         $chart->setDataset($this->translator->trans('mautic.page.graph.pie.new.vs.returning.returning'), $returning);
 
@@ -925,16 +943,16 @@ class PageModel extends FormModel
      *
      * @param \DateTime $dateFrom
      * @param \DateTime $dateTo
-     * @param array     $filters
-     * @param bool      $canViewOthers
+     * @param array $filters
+     * @param bool $canViewOthers
      *
      * @return array
      */
     public function getDwellTimesPieChartData(\DateTime $dateFrom, \DateTime $dateTo, $filters = [], $canViewOthers = true)
     {
         $timesOnSite = $this->getHitRepository()->getDwellTimeLabels();
-        $chart       = new PieChart();
-        $query       = new ChartQuery($this->em->getConnection(), $dateFrom, $dateTo);
+        $chart = new PieChart();
+        $query = new ChartQuery($this->em->getConnection(), $dateFrom, $dateTo);
 
         foreach ($timesOnSite as $time) {
             $q = $query->getCountDateDiffQuery('page_hits', 'date_hit', 'date_left', $time['from'], $time['till'], $filters);
@@ -953,11 +971,11 @@ class PageModel extends FormModel
     /**
      * Get bar chart data of hits.
      *
-     * @param char     $unit       {@link php.net/manual/en/function.date.php#refsect1-function.date-parameters}
+     * @param char $unit {@link php.net/manual/en/function.date.php#refsect1-function.date-parameters}
      * @param DateTime $dateFrom
      * @param DateTime $dateTo
-     * @param string   $dateFormat
-     * @param array    $filter
+     * @param string $dateFormat
+     * @param array $filter
      *
      * @return array
      */
@@ -969,13 +987,13 @@ class PageModel extends FormModel
         $q = $this->em->getConnection()->createQueryBuilder();
 
         $q->select('count(h.id) as count, ds.device as device')
-            ->from(MAUTIC_TABLE_PREFIX.'page_hits', 'h')
-            ->join('h', MAUTIC_TABLE_PREFIX.'lead_devices', 'ds', 'ds.id=h.device_id')
+            ->from(MAUTIC_TABLE_PREFIX . 'page_hits', 'h')
+            ->join('h', MAUTIC_TABLE_PREFIX . 'lead_devices', 'ds', 'ds.id=h.device_id')
             ->orderBy('device', 'DESC')
             ->andWhere($q->expr()->gte('h.date_hit', ':date_from'))
             ->setParameter('date_from', $dateFrom->format('Y-m-d'))
             ->andWhere($q->expr()->lte('h.date_hit', ':date_to'))
-            ->setParameter('date_to', $dateTo->format('Y-m-d'.' 23:59:59'));
+            ->setParameter('date_to', $dateTo->format('Y-m-d' . ' 23:59:59'));
         $q->groupBy('ds.device');
 
         $results = $q->execute()->fetchAll();
@@ -985,7 +1003,7 @@ class PageModel extends FormModel
         if (empty($results)) {
             $results[] = [
                 'device' => $this->translator->trans('mautic.report.report.noresults'),
-                'count'  => 0,
+                'count' => 0,
             ];
         }
 
@@ -993,7 +1011,7 @@ class PageModel extends FormModel
             $label = empty($result['device']) ? $this->translator->trans('mautic.core.no.info') : $result['device'];
 
             // $data['backgroundColor'][]='rgba(220,220,220,0.5)';
-            $chart->setDataset($label,  $result['count']);
+            $chart->setDataset($label, $result['count']);
         }
 
         return $chart->render();
@@ -1002,11 +1020,11 @@ class PageModel extends FormModel
     /**
      * Get a list of popular (by hits) pages.
      *
-     * @param int       $limit
+     * @param int $limit
      * @param \DateTime $dateFrom
      * @param \DateTime $dateTo
-     * @param array     $filters
-     * @param bool      $canViewOthers
+     * @param array $filters
+     * @param bool $canViewOthers
      *
      * @return array
      */
@@ -1014,8 +1032,8 @@ class PageModel extends FormModel
     {
         $q = $this->em->getConnection()->createQueryBuilder();
         $q->select('COUNT(DISTINCT t.id) AS hits, p.id, p.title, p.alias')
-            ->from(MAUTIC_TABLE_PREFIX.'page_hits', 't')
-            ->join('t', MAUTIC_TABLE_PREFIX.'pages', 'p', 'p.id = t.page_id')
+            ->from(MAUTIC_TABLE_PREFIX . 'page_hits', 't')
+            ->join('t', MAUTIC_TABLE_PREFIX . 'pages', 'p', 'p.id = t.page_id')
             ->orderBy('hits', 'DESC')
             ->groupBy('p.id')
             ->setMaxResults($limit);
@@ -1037,11 +1055,11 @@ class PageModel extends FormModel
     /**
      * Get a list of pages created in a date range.
      *
-     * @param int       $limit
+     * @param int $limit
      * @param \DateTime $dateFrom
      * @param \DateTime $dateTo
-     * @param array     $filters
-     * @param bool      $canViewOthers
+     * @param array $filters
+     * @param bool $canViewOthers
      *
      * @return array
      */
@@ -1049,7 +1067,7 @@ class PageModel extends FormModel
     {
         $q = $this->em->getConnection()->createQueryBuilder();
         $q->select('t.id, t.title AS name, t.date_added, t.date_modified')
-            ->from(MAUTIC_TABLE_PREFIX.'pages', 't')
+            ->from(MAUTIC_TABLE_PREFIX . 'pages', 't')
             ->setMaxResults($limit);
 
         if (!$canViewOthers) {

@@ -279,6 +279,7 @@ class PointModel extends CommonFormModel
                         $pass[] = null;
                     }
                 }
+
                 $pointsChange = $reflection->invokeArgs($this, $pass);
 
                 if ($pointsChange) {

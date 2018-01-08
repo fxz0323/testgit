@@ -56,8 +56,7 @@ class Keyword
     {
         $builder = new ClassMetadataBuilder($metadata);
 
-        $builder->setTable('weixin_keyword')
-            ->setCustomRepositoryClass('MauticPlugin\WeixinBundle\Entity\KeywordRepository');
+        $builder->setTable('weixin_keywords');
 
         $builder->addId();
 

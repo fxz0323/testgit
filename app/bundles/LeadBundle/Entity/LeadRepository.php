@@ -291,6 +291,22 @@ class LeadRepository extends CommonRepository implements CustomFieldRepositoryIn
         return (isset($results[0])) ? $results[0] : [];
     }
 
+    public function getLeadByMobile($mobile)
+    {
+        $sql = 'SELECT id FROM '.MAUTIC_TABLE_PREFIX.'leads WHERE mobile = \''.$mobile.'\' OR phone = \''.$mobile.'\'';
+
+        $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
+        $stmt->execute();
+        $id =  $stmt->fetchAll();
+
+        if(isset($id[0])) {
+            $lead = $this->find($id[0]['id']);
+            return $lead;
+        }
+
+        return null;
+    }
+
     /**
      * {@inheritdoc}
      *

@@ -10,6 +10,6 @@
  */
 ?>
 <div id="codemodeHtmlContainer">
-    <p>Place your content here</p>
+    <p>请把你的内容放在这里</p>
 </div>
 

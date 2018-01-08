@@ -41,14 +41,14 @@ class PublicController extends CommonFormController
     public function indexAction($slug, Request $request)
     {
         /** @var \Mautic\PageBundle\Model\PageModel $model */
-        $model    = $this->getModel('page');
+        $model = $this->getModel('page');
         $security = $this->get('mautic.security');
         /** @var Page $entity */
         $entity = $model->getEntityBySlugs($slug);
 
         if (!empty($entity)) {
             $userAccess = $security->hasEntityAccess('page:pages:viewown', 'page:pages:viewother', $entity->getCreatedBy());
-            $published  = $entity->isPublished();
+            $published = $entity->isPublished();
 
             // Make sure the page is published or deny access if not
             if (!$published && !$userAccess) {
@@ -64,20 +64,20 @@ class PublicController extends CommonFormController
                 }
             }
 
-            $lead  = null;
+            $lead = null;
             $query = null;
             if (!$userAccess) {
                 /** @var LeadModel $leadModel */
                 $leadModel = $this->getModel('lead');
                 // Extract the lead from the request so it can be used to determine language if applicable
                 $query = $model->getHitQuery($this->request, $entity);
-                $lead  = $leadModel->getContactFromRequest($query);
+                $lead = $leadModel->getContactFromRequest($query);
             }
 
             // Correct the URL if it doesn't match up
             if (!$request->attributes->get('ignore_mismatch', 0)) {
                 // Make sure URLs match up
-                $url        = $model->generateUrl($entity, false);
+                $url = $model->generateUrl($entity, false);
                 $requestUri = $this->request->getRequestUri();
 
                 // Remove query when comparing
@@ -109,16 +109,16 @@ class PublicController extends CommonFormController
             if (!$userAccess) {
                 // Check to see if a variant should be shown versus the parent but ignore if a user is previewing
                 if (count($childrenVariants)) {
-                    $variants      = [];
+                    $variants = [];
                     $variantWeight = 0;
-                    $totalHits     = $entity->getVariantHits();
+                    $totalHits = $entity->getVariantHits();
 
                     foreach ($childrenVariants as $id => $child) {
                         if ($child->isPublished()) {
                             $variantSettings = $child->getVariantSettings();
-                            $variants[$id]   = [
+                            $variants[$id] = [
                                 'weight' => ($variantSettings['weight'] / 100),
-                                'hits'   => $child->getVariantHits(),
+                                'hits' => $child->getVariantHits(),
                             ];
                             $variantWeight += $variantSettings['weight'];
 
@@ -127,7 +127,7 @@ class PublicController extends CommonFormController
                             /** @var Page $translation */
                             foreach ($translations as $translation) {
                                 if ($translation->isPublished()) {
-                                    $variants[$id]['hits'] += (int) $translation->getVariantHits();
+                                    $variants[$id]['hits'] += (int)$translation->getVariantHits();
                                 }
                             }
 
@@ -137,7 +137,7 @@ class PublicController extends CommonFormController
 
                     if (count($variants)) {
                         //check to see if this user has already been displayed a specific variant
-                        $variantCookie = $this->request->cookies->get('mautic_page_'.$entity->getId());
+                        $variantCookie = $this->request->cookies->get('mautic_page_' . $entity->getId());
 
                         if (!empty($variantCookie)) {
                             if (isset($variants[$variantCookie])) {
@@ -150,7 +150,7 @@ class PublicController extends CommonFormController
                             // Add parent weight
                             $variants[$entity->getId()] = [
                                 'weight' => ((100 - $variantWeight) / 100),
-                                'hits'   => $entity->getVariantHits(),
+                                'hits' => $entity->getVariantHits(),
                             ];
 
                             // Count translations for the parent as well
@@ -158,7 +158,7 @@ class PublicController extends CommonFormController
                             /** @var Page $translation */
                             foreach ($translations as $translation) {
                                 if ($translation->isPublished()) {
-                                    $variants[$entity->getId()]['hits'] += (int) $translation->getVariantHits();
+                                    $variants[$entity->getId()]['hits'] += (int)$translation->getVariantHits();
                                 }
                             }
                             $totalHits += $variants[$id]['hits'];
@@ -192,7 +192,7 @@ class PublicController extends CommonFormController
                             $useId = key($variants);
 
                             //set the cookie - 14 days
-                            $this->get('mautic.helper.cookie')->setCookie('mautic_page_'.$entity->getId(), $useId, 3600 * 24 * 14);
+                            $this->get('mautic.helper.cookie')->setCookie('mautic_page_' . $entity->getId(), $useId, 3600 * 24 * 14);
 
                             if ($useId != $entity->getId()) {
                                 $entity = $childrenVariants[$useId];
@@ -220,7 +220,7 @@ class PublicController extends CommonFormController
             $analytics = $this->get('mautic.helper.template.analytics')->getCode();
 
             $BCcontent = $entity->getContent();
-            $content   = $entity->getCustomHtml();
+            $content = $entity->getCustomHtml();
             // This condition remains so the Mautic v1 themes would display the content
             if (empty($content) && !empty($BCcontent)) {
                 /**
@@ -228,7 +228,7 @@ class PublicController extends CommonFormController
                  */
                 $template = $entity->getTemplate();
                 //all the checks pass so display the content
-                $slots   = $this->factory->getTheme($template)->getSlots('page');
+                $slots = $this->factory->getTheme($template)->getSlots('page');
                 $content = $entity->getContent();
 
                 $this->processSlots($slots, $entity);
@@ -238,23 +238,23 @@ class PublicController extends CommonFormController
                     $this->factory->getHelper('template.assets')->addCustomDeclaration($analytics);
                 }
 
-                $logicalName = $this->factory->getHelper('theme')->checkForTwigTemplate(':'.$template.':page.html.php');
+                $logicalName = $this->factory->getHelper('theme')->checkForTwigTemplate(':' . $template . ':page.html.php');
 
                 $response = $this->render(
                     $logicalName,
                     [
-                        'slots'    => $slots,
-                        'content'  => $content,
-                        'page'     => $entity,
+                        'slots' => $slots,
+                        'content' => $content,
+                        'page' => $entity,
                         'template' => $template,
-                        'public'   => true,
+                        'public' => true,
                     ]
                 );
 
                 $content = $response->getContent();
             } else {
                 if (!empty($analytics)) {
-                    $content = str_replace('</head>', $analytics."\n</head>", $content);
+                    $content = str_replace('</head>', $analytics . "\n</head>", $content);
                 }
             }
 
@@ -289,7 +289,7 @@ class PublicController extends CommonFormController
      */
     public function previewAction($id)
     {
-        $model  = $this->getModel('page');
+        $model = $this->getModel('page');
         $entity = $model->getEntity($id);
 
         if ($entity === null) {
@@ -299,11 +299,11 @@ class PublicController extends CommonFormController
         $analytics = $this->factory->getHelper('template.analytics')->getCode();
 
         $BCcontent = $entity->getContent();
-        $content   = $entity->getCustomHtml();
+        $content = $entity->getCustomHtml();
         if (empty($content) && !empty($BCcontent)) {
             $template = $entity->getTemplate();
             //all the checks pass so display the content
-            $slots   = $this->factory->getTheme($template)->getSlots('page');
+            $slots = $this->factory->getTheme($template)->getSlots('page');
             $content = $entity->getContent();
 
             $this->processSlots($slots, $entity);
@@ -313,23 +313,23 @@ class PublicController extends CommonFormController
                 $this->factory->getHelper('template.assets')->addCustomDeclaration($analytics);
             }
 
-            $logicalName = $this->factory->getHelper('theme')->checkForTwigTemplate(':'.$template.':page.html.php');
+            $logicalName = $this->factory->getHelper('theme')->checkForTwigTemplate(':' . $template . ':page.html.php');
 
             $response = $this->render(
                 $logicalName,
                 [
-                    'slots'    => $slots,
-                    'content'  => $content,
-                    'page'     => $entity,
+                    'slots' => $slots,
+                    'content' => $content,
+                    'page' => $entity,
                     'template' => $template,
-                    'public'   => true, // @deprecated Remove in 2.0
+                    'public' => true, // @deprecated Remove in 2.0
                 ]
             );
 
             $content = $response->getContent();
         } else {
             if (!empty($analytics)) {
-                $content = str_replace('</head>', $analytics."\n</head>", $content);
+                $content = str_replace('</head>', $analytics . "\n</head>", $content);
             }
         }
 
@@ -380,8 +380,8 @@ class PublicController extends CommonFormController
         return new JsonResponse(
             [
                 'success' => 1,
-                'id'      => $lead->getId(),
-                'sid'     => $trackingId,
+                'id' => $lead->getId(),
+                'sid' => $trackingId,
             ]
         );
     }
@@ -397,7 +397,7 @@ class PublicController extends CommonFormController
     {
         /** @var \Mautic\PageBundle\Model\RedirectModel $redirectModel */
         $redirectModel = $this->getModel('page.redirect');
-        $redirect      = $redirectModel->getRedirectById($redirectId);
+        $redirect = $redirectModel->getRedirectById($redirectId);
 
         if (empty($redirect) || !$redirect->isPublished(false)) {
             throw $this->createNotFoundException($this->translator->trans('mautic.core.url.error.404'));
@@ -425,9 +425,11 @@ class PublicController extends CommonFormController
         // Search replace lead fields in the URL
         /** @var \Mautic\LeadBundle\Model\LeadModel $leadModel */
         $leadModel = $this->getModel('lead');
-        $lead      = $leadModel->getCurrentLead();
+        $lead = $leadModel->getCurrentLead();
         $leadArray = $lead->getProfileFields();
-        $url       = TokenHelper::findLeadTokens($url, $leadArray, true);
+        $url = TokenHelper::findLeadTokens($url, $leadArray, true);
+
+        file_put_contents('/tmp/test.log', date('Y-m-d H:i:s') . ':' . 'redirect: ' . $_SERVER['REMOTE_ADDR'] . ' : ' . $lead->getFirstname() . ' : ' . $url . PHP_EOL, FILE_APPEND);
 
         return $this->redirect($url);
     }
@@ -438,7 +440,7 @@ class PublicController extends CommonFormController
      * @deprecated - to be removed in 3.0
      *
      * @param array $slots
-     * @param Page  $entity
+     * @param Page $entity
      */
     private function processSlots($slots, $entity)
     {
@@ -452,7 +454,7 @@ class PublicController extends CommonFormController
         foreach ($slots as $slot => $slotConfig) {
             // backward compatibility - if slotConfig array does not exist
             if (is_numeric($slot)) {
-                $slot       = $slotConfig;
+                $slot = $slotConfig;
                 $slotConfig = [];
             }
 
@@ -461,15 +463,15 @@ class PublicController extends CommonFormController
                     $options = json_decode($content[$slot], true);
                 } else {
                     $options = [
-                        'width'            => '100%',
-                        'height'           => '250px',
+                        'width' => '100%',
+                        'height' => '250px',
                         'background_color' => 'transparent',
                         'arrow_navigation' => false,
-                        'dot_navigation'   => true,
-                        'interval'         => 5000,
-                        'pause'            => 'hover',
-                        'wrap'             => true,
-                        'keyboard'         => true,
+                        'dot_navigation' => true,
+                        'interval' => 5000,
+                        'pause' => 'hover',
+                        'wrap' => true,
+                        'keyboard' => true,
                     ];
                 }
 
@@ -477,14 +479,14 @@ class PublicController extends CommonFormController
                 if (empty($options['slides'])) {
                     $options['slides'] = [
                         [
-                            'order'            => 0,
+                            'order' => 0,
                             'background-image' => $assetsHelper->getUrl('media/images/mautic_logo_lb200.png'),
-                            'captionheader'    => 'Caption 1',
+                            'captionheader' => 'Caption 1',
                         ],
                         [
-                            'order'            => 1,
+                            'order' => 1,
                             'background-image' => $assetsHelper->getUrl('media/images/mautic_logo_db200.png'),
-                            'captionheader'    => 'Caption 2',
+                            'captionheader' => 'Caption 2',
                         ],
                     ];
                 }
@@ -497,7 +499,7 @@ class PublicController extends CommonFormController
                     }
                 );
 
-                $options['slot']   = $slot;
+                $options['slot'] = $slot;
                 $options['public'] = true;
 
                 $renderingEngine = $this->container->get('templating')->getEngine('MauticPageBundle:Page:Slots/slideshow.html.php');
@@ -513,7 +515,7 @@ class PublicController extends CommonFormController
         }
 
         $parentVariant = $entity->getVariantParent();
-        $title         = (!empty($parentVariant)) ? $parentVariant->getTitle() : $entity->getTitle();
+        $title = (!empty($parentVariant)) ? $parentVariant->getTitle() : $entity->getTitle();
         $slotsHelper->set('pageTitle', $title);
     }
 
@@ -552,8 +554,8 @@ class PublicController extends CommonFormController
             $leadModel = $this->getModel('lead');
 
             list($lead, $trackingId, $generated) = $leadModel->getCurrentLead(true);
-            $data                                = [
-                'id'  => $lead->getId(),
+            $data = [
+                'id' => $lead->getId(),
                 'sid' => $trackingId,
             ];
         }

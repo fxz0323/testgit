@@ -17,26 +17,26 @@ $isAnonymous = $lead->isAnonymous();
 
 $flag = (!empty($fields['core']['country'])) ? $view['assets']->getCountryFlag($fields['core']['country']['value']) : '';
 
-$leadName       = ($isAnonymous) ? $view['translator']->trans($lead->getPrimaryIdentifier()) : $lead->getPrimaryIdentifier();
+$leadName = ($isAnonymous) ? $view['translator']->trans($lead->getPrimaryIdentifier()) : $lead->getPrimaryIdentifier();
 $leadActualName = $lead->getName();
-$leadCompany    = $lead->getCompany();
+$leadCompany = $lead->getCompany();
 
 $view['slots']->set('mauticContent', 'lead');
 
 $avatar = '';
 if (!$isAnonymous) {
-    $img    = $view['lead_avatar']->getAvatar($lead);
-    $avatar = '<span class="pull-left img-wrapper img-rounded mr-10" style="width:33px"><img src="'.$img.'" alt="" /></span>';
+    $img = $view['lead_avatar']->getAvatar($lead);
+    $avatar = '<span class="pull-left img-wrapper img-rounded mr-10" style="width:33px"><img src="' . $img . '" alt="" /></span>';
 }
 
 $view['slots']->set(
     'headerTitle',
-    $avatar.'<div class="pull-left mt-5"><span class="span-block">'.$leadName.'</span><span class="span-block small ml-sm">'
-    .$lead->getSecondaryIdentifier().'</span></div>'
+    $avatar . '<div class="pull-left mt-5"><span class="span-block">' . $leadName . '</span><span class="span-block small ml-sm">'
+    . $lead->getSecondaryIdentifier() . '</span></div>'
 );
 
 $groups = array_keys($fields);
-$edit   = $view['security']->hasEntityAccess(
+$edit = $view['security']->hasEntityAccess(
     $permissions['lead:leads:editown'],
     $permissions['lead:leads:editother'],
     $lead->getPermissionUser()
@@ -47,7 +47,7 @@ $buttons = [];
 if (!empty($fields['core']['email']['value'])) {
     $buttons[] = [
         'attr' => [
-            'id'          => 'sendEmailButton',
+            'id' => 'sendEmailButton',
             'data-toggle' => 'ajaxmodal',
             'data-target' => '#MauticSharedModal',
             'data-header' => $view['translator']->trans(
@@ -59,9 +59,9 @@ if (!empty($fields['core']['email']['value'])) {
                 ['objectId' => $lead->getId(), 'objectAction' => 'email']
             ),
         ],
-        'btnText'   => $view['translator']->trans('mautic.lead.email.send_email'),
+        'btnText' => $view['translator']->trans('mautic.lead.email.send_email'),
         'iconClass' => 'fa fa-send',
-        'primary'   => true,
+        'primary' => true,
     ];
 }
 
@@ -81,7 +81,7 @@ if ($edit) {
                 ['objectId' => $lead->getId(), 'objectAction' => 'contactFrequency']
             ),
         ],
-        'btnText'   => $view['translator']->trans('mautic.lead.contact.frequency'),
+        'btnText' => $view['translator']->trans('mautic.lead.contact.frequency'),
         'iconClass' => 'fa fa-signal',
     ];
 }
@@ -96,12 +96,12 @@ if ($view['security']->isGranted('campaign:campaigns:edit')) {
                 ['%name%' => $lead->getPrimaryIdentifier()]
             ),
             'data-footer' => 'false',
-            'href'        => $view['router']->path(
+            'href' => $view['router']->path(
                 'mautic_contact_action',
                 ['objectId' => $lead->getId(), 'objectAction' => 'campaign']
             ),
         ],
-        'btnText'   => $view['translator']->trans('mautic.campaign.campaigns'),
+        'btnText' => $view['translator']->trans('mautic.campaign.campaigns'),
         'iconClass' => 'fa fa-clock-o',
     ];
 }
@@ -126,7 +126,7 @@ if (($view['security']->hasEntityAccess(
                 ['objectId' => $lead->getId(), 'objectAction' => 'merge']
             ),
         ],
-        'btnText'   => $view['translator']->trans('mautic.lead.merge'),
+        'btnText' => $view['translator']->trans('mautic.lead.merge'),
         'iconClass' => 'fa fa-user',
     ];
 }
@@ -136,12 +136,12 @@ $view['slots']->set(
     $view->render(
         'MauticCoreBundle:Helper:page_actions.html.php',
         [
-            'item'            => $lead,
-            'routeBase'       => 'contact',
-            'langVar'         => 'lead.lead',
-            'customButtons'   => $buttons,
+            'item' => $lead,
+            'routeBase' => 'contact',
+            'langVar' => 'lead.lead',
+            'customButtons' => $buttons,
             'templateButtons' => [
-                'edit'   => $edit,
+                'edit' => $edit,
                 'delete' => $view['security']->hasEntityAccess(
                     $permissions['lead:leads:deleteown'],
                     $permissions['lead:leads:deleteother'],
@@ -172,15 +172,30 @@ $view['slots']->set(
                     <?php foreach ($groups as $g): ?>
                         <?php if (!empty($fields[$g])): ?>
                             <li class="<?php if ($step === 0) {
-    echo 'active';
-} ?>">
+                                echo 'active';
+                            } ?>">
                                 <a href="#<?php echo $g; ?>" class="group" data-toggle="tab">
-                                    <?php echo $view['translator']->trans('mautic.lead.field.group.'.$g); ?>
+                                    <?php echo $view['translator']->trans('mautic.lead.field.group.' . $g); ?>
                                 </a>
                             </li>
                             <?php ++$step; ?>
                         <?php endif; ?>
                     <?php endforeach; ?>
+                    <li>
+                        <a href="#weixin" class="group" data-toggle="tab">
+                            <?php echo $view['translator']->trans('mautic.lead.field.group.weixin'); ?>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#page" class="group" data-toggle="tab">
+                            <?php echo $view['translator']->trans('mautic.lead.field.group.page'); ?>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#order" class="group" data-toggle="tab">
+                            <?php echo $view['translator']->trans('mautic.lead.field.group.order'); ?>
+                        </a>
+                    </li>
                 </ul>
 
                 <!-- start: tab-content -->
@@ -199,15 +214,16 @@ $view['slots']->set(
                                                 </td>
                                                 <td>
                                                     <?php if ($group == 'core' && $field['alias'] == 'country' && !empty($flag)): ?>
-                                                    <img class="mr-sm" src="<?php echo $flag; ?>" alt="" style="max-height: 24px;"/>
+                                                    <img class="mr-sm" src="<?php echo $flag; ?>" alt=""
+                                                         style="max-height: 24px;"/>
                                                     <span class="mt-1"><?php echo $field['value']; ?>
-                                                    <?php else: ?>
-                                                        <?php if (is_array($field['value']) && 'multiselect' === $field['type']): ?>
-                                                            <?php echo implode(', ', $field['value']); ?>
                                                         <?php else: ?>
-                                                            <?php echo $field['value']; ?>
+                                                            <?php if (is_array($field['value']) && 'multiselect' === $field['type']): ?>
+                                                                <?php echo implode(', ', $field['value']); ?>
+                                                            <?php else: ?>
+                                                                <?php echo $field['value']; ?>
+                                                            <?php endif; ?>
                                                         <?php endif; ?>
-                                                    <?php endif; ?>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -218,6 +234,167 @@ $view['slots']->set(
                         </div>
                         <?php ++$i; ?>
                     <?php endforeach; ?>
+                    <div class="tab-pane fade bdr-w-0" id="weixin">
+                        <div class="pr-md pl-md pb-md">
+                            <h4>关注公众号</h4>
+                            <div class="panel shd-none mb-0">
+                                <table class="table table-bordered table-striped mb-0">
+                                    <tbody>
+                                    <?php
+                                    foreach ($lead->getWeixinActions() as $action) {
+                                        if ($action->getEvent() == 'weixin.subscribe') {
+                                            echo '<tr><td>' . $action->getWeixin() . '</td><td>' . $action->getTime()->format('Y-m-d') . '</td></tr>';
+                                        }
+                                    }
+                                    ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="pr-md pl-md pb-md">
+                            <h4>取消关注公众号</h4>
+                            <div class="panel shd-none mb-0">
+                                <table class="table table-bordered table-striped mb-0">
+                                    <tbody>
+                                    <?php
+                                    foreach ($lead->getWeixinActions() as $action) {
+                                        if ($action->getEvent() == 'weixin.unsubscribe') {
+                                            echo '<tr><td>' . $action->getWeixin() . '</td><td>' . $action->getTime()->format('Y-m-d') . '</td></tr>';
+                                        }
+                                    }
+                                    ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="pr-md pl-md pb-md">
+                            <h4>向公众号发送消息</h4>
+                            <div class="panel shd-none mb-0">
+                                <table class="table table-bordered table-striped mb-0">
+                                    <tbody>
+                                    <?php
+                                    foreach ($lead->getWeixinActions() as $action) {
+                                        if ($action->getEvent() == 'weixin.text') {
+                                            echo '<tr><td>' . $action->getWeixin() . '</td><td>'.$action->getMessage()['Content'].'</td><td>' . $action->getTime()->format('Y-m-d') . '</td></tr>';
+                                        }
+                                    }
+                                    ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="pr-md pl-md pb-md">
+                            <h4>点击菜单</h4>
+                            <div class="panel shd-none mb-0">
+                                <table class="table table-bordered table-striped mb-0">
+                                    <tbody>
+                                    <?php
+                                    foreach ($lead->getWeixinActions() as $action) {
+                                        if ($action->getEvent() == 'weixin.click') {
+                                            echo '<tr><td>' . $action->getWeixin() . '</td><td>'.$action->getMessage()['EventKey'].'</td><td>' . $action->getTime()->format('Y-m-d') . '</td></tr>';
+                                        }
+                                    }
+                                    ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="pr-md pl-md pb-md">
+                            <h4>扫描二维码</h4>
+                            <div class="panel shd-none mb-0">
+                                <table class="table table-bordered table-striped mb-0">
+                                    <tbody>
+                                    <?php
+                                    foreach ($lead->getWeixinActions() as $action) {
+                                        if ($action->getEvent() == 'weixin.scan') {
+                                            echo '<tr><td>' . $action->getWeixin() . '</td><td>' . $action->getTime()->format('Y-m-d') . '</td></tr>';
+                                        }
+                                    }
+                                    ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade bdr-w-0" id="page">
+                        <div class="pr-md pl-md pb-md">
+                            <div class="panel shd-none mb-0">
+                                <table class="table table-bordered table-striped mb-0">
+                                    <thead>
+                                    <td>链接来源</td>
+                                    <td>内容名称</td>
+                                    <td>点击时间</td>
+                                    <td>访问页数</td>
+                                    <td>访问页面</td>
+                                    <td>停留时间</td>
+                                    </thead>
+                                    <tbody>
+                                    <?php
+                                    foreach ($events['events'] as $event) {
+                                        if ($event['event'] == 'page.hit') {
+                                            echo '<tr><td>' . $event['extra']['hit']['source'] . '</td>
+                                                        <td>' . (isset($event['extra']['hit']['sourceName']) ? $event['extra']['hit']['sourceName'] : '') . '</td>
+                                                        <td>' . $event['timestamp']->format('Y-m-d H:i:s') . '</td>
+                                                        <td>1</td>                                                        
+                                                        <td>' . $event['extra']['hit']['url'] . '</td><td>';
+
+                                            echo $event['extra']['hit']['dateLeft'] ? $event['timestamp']->diff($event['extra']['hit']['dateLeft'])->format('%i:%s') : '未知';
+                                            echo '</td></tr>';
+                                        }
+                                    }
+                                    ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade bdr-w-0" id="order">
+                        <?php foreach ($lead->getLeadOrders() as $order): ?>
+                            <div class="pr-md pl-md pb-md">
+                                <div class="panel shd-none mb-0">
+                                    <table class="table table-bordered table-striped mb-0">
+                                        <thead>
+                                        <tr>
+                                            <th><?php echo '订单来源: ' . $order->getOrigin() ?></th>
+                                            <th><?php echo '订单号: ' . $order->getOrderNo() ?></th>
+                                            <th><?php echo '下单时间:' . ($order->getOrderTime()? $order->format('Y-m-d H-s-i') : '') ?></th>
+                                            <th><?php echo '订单金额:' . $order->getTotalFee() ?></th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td>商品名</td>
+                                            <td>品类</td>
+                                            <td>型号</td>
+                                            <td>颜色</td>
+                                            <td>单价</td>
+                                            <td>数量</td>
+                                            <td>金额</td>
+                                        </tr>
+                                        <?php foreach ($order->getOrderLines() as $orderLine): ?>
+                                            <tr>
+                                                <td><?php echo $orderLine->getProductName() ?></td>
+                                                <td><?php echo $orderLine->getProductType() ?></td>
+                                                <td><?php echo $orderLine->getProductSize() ?></td>
+                                                <td><?php echo $orderLine->getProductColor() ?></td>
+                                                <td><?php echo $orderLine->getUnitPrice() ?></td>
+                                                <td><?php echo $orderLine->getQuantity() ?></td>
+                                                <td><?php echo $orderLine->getTotalPrice() ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                        </tbody>
+                                        <tfoot>
+                                        <tr>
+                                            <th><?php echo '收件人: ' . $order->getRecipient() ?></th>
+                                            <th><?php echo '收件人电话: ' . $order->getRecipientMobile() ?></th>
+                                            <th><?php echo '收件人地址:' . $order->getAddress() ?></th>
+                                        </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
             </div>
             <!--/ lead detail collapseable -->
@@ -309,8 +486,8 @@ $view['slots']->set(
                     'MauticLeadBundle:Timeline:list.html.php',
                     [
                         'events' => $events,
-                        'lead'   => $lead,
-                        'tmpl'   => 'index',
+                        'lead' => $lead,
+                        'tmpl' => 'index',
                     ]
                 ); ?>
             </div>
@@ -328,8 +505,8 @@ $view['slots']->set(
                     <?php echo $view->render(
                         'MauticLeadBundle:Social:index.html.php',
                         [
-                            'lead'              => $lead,
-                            'socialProfiles'    => $socialProfiles,
+                            'lead' => $lead,
+                            'socialProfiles' => $socialProfiles,
                             'socialProfileUrls' => $socialProfileUrls,
                         ]
                     ); ?>
@@ -359,7 +536,7 @@ $view['slots']->set(
                         <a href="javascript:void(0)"
                            class="arrow text-muted text-center<?php echo ($avatarPanelState == 'expanded') ? ''
                                : ' collapsed'; ?>" data-toggle="collapse" data-target="#lead-avatar-block"><span
-                                class="caret"></span></a>
+                                    class="caret"></span></a>
                     </div>
                     <div class="collapse<?php echo ($avatarPanelState == 'expanded') ? ' in' : ''; ?>"
                          id="lead-avatar-block">
@@ -371,7 +548,7 @@ $view['slots']->set(
             <div class="mt-sm points-panel text-center">
                 <?php
                 $color = $lead->getColor();
-                $style = !empty($color) ? ' style="font-color: '.$color.' !important;"' : '';
+                $style = !empty($color) ? ' style="font-color: ' . $color . ' !important;"' : '';
                 ?>
                 <h1 <?php echo $style; ?>>
                     <?php echo $view['translator']->transChoice(
@@ -391,27 +568,34 @@ $view['slots']->set(
                     <div class="panel-heading text-center">
                         <h4 class="fw-sb">
                             <?php if ($doNotContact['unsubscribed']): ?>
-                                <span class="label label-danger" data-toggle="tooltip" title="<?php echo $doNotContact['comments']; ?>">
+                                <span class="label label-danger" data-toggle="tooltip"
+                                      title="<?php echo $doNotContact['comments']; ?>">
                                 <?php echo $view['translator']->trans('mautic.lead.do.not.contact'); ?>
                             </span>
 
                             <?php elseif ($doNotContact['manual']): ?>
-                                <span class="label label-danger" data-toggle="tooltip" title="<?php echo $doNotContact['comments']; ?>">
+                                <span class="label label-danger" data-toggle="tooltip"
+                                      title="<?php echo $doNotContact['comments']; ?>">
                                 <?php echo $view['translator']->trans('mautic.lead.do.not.contact'); ?>
-                                    <span data-toggle="tooltip" data-placement="bottom" title="<?php echo $view['translator']->trans(
-                                        'mautic.lead.remove_dnc_status'
-                                    ); ?>">
-                                    <i class="fa fa-times has-click-event" onclick="Mautic.removeBounceStatus(this, <?php echo $doNotContact['id']; ?>);"></i>
+                                    <span data-toggle="tooltip" data-placement="bottom"
+                                          title="<?php echo $view['translator']->trans(
+                                              'mautic.lead.remove_dnc_status'
+                                          ); ?>">
+                                    <i class="fa fa-times has-click-event"
+                                       onclick="Mautic.removeBounceStatus(this, <?php echo $doNotContact['id']; ?>);"></i>
                                 </span>
                             </span>
 
                             <?php elseif ($doNotContact['bounced']): ?>
-                                <span class="label label-warning" data-toggle="tooltip" title="<?php echo $doNotContact['comments']; ?>">
+                                <span class="label label-warning" data-toggle="tooltip"
+                                      title="<?php echo $doNotContact['comments']; ?>">
                                 <?php echo $view['translator']->trans('mautic.lead.do.not.contact_bounced'); ?>
-                                    <span data-toggle="tooltip" data-placement="bottom" title="<?php echo $view['translator']->trans(
-                                        'mautic.lead.remove_dnc_status'
-                                    ); ?>">
-                                    <i class="fa fa-times has-click-event" onclick="Mautic.removeBounceStatus(this, <?php echo $doNotContact['id']; ?>);"></i>
+                                    <span data-toggle="tooltip" data-placement="bottom"
+                                          title="<?php echo $view['translator']->trans(
+                                              'mautic.lead.remove_dnc_status'
+                                          ); ?>">
+                                    <i class="fa fa-times has-click-event"
+                                       onclick="Mautic.removeBounceStatus(this, <?php echo $doNotContact['id']; ?>);"></i>
                                 </span>
                             </span>
                             <?php endif; ?>
@@ -426,10 +610,10 @@ $view['slots']->set(
                 </div>
             </div>
             <div class="panel-body pt-sm">
-            <?php if ($lead->getOwner()) : ?>
-                <h6 class="fw-sb"><?php echo $view['translator']->trans('mautic.lead.lead.field.owner'); ?></h6>
-                <p class="text-muted"><?php echo $lead->getOwner()->getName(); ?></p>
-            <?php endif; ?>
+                <?php if ($lead->getOwner()) : ?>
+                    <h6 class="fw-sb"><?php echo $view['translator']->trans('mautic.lead.lead.field.owner'); ?></h6>
+                    <p class="text-muted"><?php echo $lead->getOwner()->getName(); ?></p>
+                <?php endif; ?>
 
                 <h6 class="fw-sb">
                     <?php echo $view['translator']->trans('mautic.lead.field.address'); ?>
@@ -439,10 +623,10 @@ $view['slots']->set(
                         <?php echo $fields['core']['address1']['value']; ?><br>
                     <?php endif; ?>
                     <?php if (!empty($fields['core']['address2']['value'])) : echo $fields['core']['address2']['value']
-                        .'<br>'; endif ?>
+                        . '<br>'; endif ?>
                     <?php echo $lead->getLocation(); ?> <?php if (isset($fields['core']['zipcode'])) {
-                            echo $fields['core']['zipcode']['value'];
-                        } ?><br>
+                        echo $fields['core']['zipcode']['value'];
+                    } ?><br>
                 </address>
 
                 <h6 class="fw-sb"><?php echo $view['translator']->trans('mautic.core.type.email'); ?></h6>
@@ -471,28 +655,29 @@ $view['slots']->set(
                 <div class="panel-body pt-sm">
                     <ul class="media-list media-list-feed">
                         <?php foreach ($upcomingEvents as $event) : ?>
-                        <?php
+                            <?php
                             $metadata = unserialize($event['metadata']);
-                            $errors   = false;
+                            $errors = false;
                             if (!empty($metadata['errors'])):
                                 $errors = (is_array($metadata['errors'])) ? implode('<br />', $metadata['errors']) : $metadata['errors'];
                             endif;
-                        ?>
+                            ?>
                             <li class="media">
                                 <div class="media-object pull-left mt-xs">
                                     <span class="figure"></span>
                                 </div>
                                 <div class="media-body">
-                                    <?php $link = '<a href="'.$view['router']->path(
+                                    <?php $link = '<a href="' . $view['router']->path(
                                             'mautic_campaign_action',
                                             ['objectAction' => 'view', 'objectId' => $event['campaign_id']]
-                                        ).'" data-toggle="ajax">'.$event['campaign_name'].'</a>'; ?>
+                                        ) . '" data-toggle="ajax">' . $event['campaign_name'] . '</a>'; ?>
                                     <?php echo $view['translator']->trans(
                                         'mautic.lead.lead.upcoming.event.triggered.at',
                                         ['%event%' => $event['event_name'], '%link%' => $link]
                                     ); ?>
                                     <?php if (!empty($errors)): ?>
-                                    <i class="fa fa-warning text-danger" data-toggle="tooltip" title="<?php echo $errors; ?>"></i>
+                                        <i class="fa fa-warning text-danger" data-toggle="tooltip"
+                                           title="<?php echo $errors; ?>"></i>
                                     <?php endif; ?>
                                     <p class="fs-12 dark-sm timeline-campaign-event-date-<?php echo $event['event_id']; ?>"><?php echo $view['date']->toFull($event['trigger_date'], 'utc'); ?></p>
                                 </div>
@@ -514,8 +699,13 @@ $view['slots']->set(
             <div class="panel-title">  <?php echo $view['translator']->trans(
                     'mautic.lead.lead.companies'); ?></div>
             <?php foreach ($companies as $key => $company): ?>
-                <h5 class="pull-left mt-xs mr-xs"><span class="label label-success" >
-                       <i id="company-<?php echo $company['id']; ?>" class="fa fa-check <?php if ($company['is_primary'] == 1): ?>primary<?php endif?>" onclick="Mautic.setAsPrimaryCompany(<?php echo $company['id']?>, <?php echo $lead->getId()?>);" title="<?php echo $view['translator']->trans('mautic.lead.company.set.primary'); ?>"></i> <a href="<?php echo $view['router']->path('mautic_company_action', ['objectAction' => 'edit', 'objectId' => $company['id']]); ?>" style="color: white;"><?php echo $company['companyname']; ?></a>
+                <h5 class="pull-left mt-xs mr-xs"><span class="label label-success">
+                       <i id="company-<?php echo $company['id']; ?>"
+                          class="fa fa-check <?php if ($company['is_primary'] == 1): ?>primary<?php endif ?>"
+                          onclick="Mautic.setAsPrimaryCompany(<?php echo $company['id'] ?>, <?php echo $lead->getId() ?>);"
+                          title="<?php echo $view['translator']->trans('mautic.lead.company.set.primary'); ?>"></i> <a
+                                href="<?php echo $view['router']->path('mautic_company_action', ['objectAction' => 'edit', 'objectId' => $company['id']]); ?>"
+                                style="color: white;"><?php echo $company['companyname']; ?></a>
                     </span>
                 </h5>
             <?php endforeach; ?>

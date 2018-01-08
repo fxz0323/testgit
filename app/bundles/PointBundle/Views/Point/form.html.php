@@ -20,6 +20,7 @@ $view['slots']->set('headerTitle', $header);
 echo $view['form']->start($form);
 ?>
 <!-- start: box layout -->
+    <!--添加或修改 表单 start-->
 <div class="box-layout">
     <!-- container -->
     <div class="col-md-9 bg-auto height-auto bdr-r">
@@ -58,4 +59,5 @@ echo $view['form']->start($form);
 		</div>
 	</div>
 </div>
+    <!--添加或修改 表单 end-->
 <?php echo $view['form']->end($form); ?>

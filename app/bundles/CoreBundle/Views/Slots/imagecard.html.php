@@ -12,6 +12,7 @@
 
 <table class="imagecard" align="center" style="background-color: #ddd;">
     <tr><td class="imagecard-image" align="center"><img width="100%" src="<?php echo $view['assets']->getUrl('themes/blank-big.png', null, null, true); ?>" alt="An image"/></td></tr>
-    <tr><td class="imagecard-caption" style="line-height:16px;padding: 5px;background-color: #bbb;font-size:16px;color:#000" align="center">Your image caption goes here. You can change the position of the caption and style in the customize slot tab.</td></tr>
+<!--    <tr><td class="imagecard-caption" style="line-height:16px;padding: 5px;background-color: #bbb;font-size:16px;color:#000" align="center">Your image caption goes here. You can change the position of the caption and style in the customize slot tab.</td></tr>-->
+    <tr><td class="imagecard-caption" style="line-height:16px;padding: 5px;background-color: #bbb;font-size:16px;color:#000" align="center">您的图片标题就在这里，您可以在自定义插槽选项卡中更改标题和样式的位置。</td></tr>
 </table>
 <div style="clear:both"></div>

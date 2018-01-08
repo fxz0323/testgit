@@ -792,13 +792,12 @@ class SmsController extends AbstractFormController
                     /** @var \Mautic\LeadBundle\Model\LeadModel $leadModel */
                     $leadModel = $this->getModel('lead');
 
-                    $sendCount = 0;
+                    $sendResult = null;
 
                     foreach ($leads as $group){
                         foreach($group as $lead){
-                            $sendCount++;
                             $lead = $leadModel->getEntity($lead['id']);
-                            $ret = $model->sendSms($sms,$lead);
+                            $sendResult = $model->sendSms($sms,$lead);
                         }
                     }
 
@@ -814,8 +813,8 @@ class SmsController extends AbstractFormController
                     $event->setTriggerIntervalUnit("d");
                     $event->setTriggerMode("date");
                     $event->setTempId("new1234");
-                    $event->setStatus(1);
-                    $event->setSendCount($sendCount);
+                    $event->setStatus(2);
+                    $event->setSendCount($sendResult['send_count']);
                     $model->getEventRepository()->saveEntity($event);
 
                 }else{

@@ -18,10 +18,13 @@ $view['slots']->set(
         'MauticCoreBundle:Helper:page_actions.html.php',
         [
             'templateButtons' => [
-                'new' => true, // this is intentional. Each user can segment leads
+                //'new' => true, // this is intentional. Each user can segment leads
             ],
             'routeBase' => 'segment',
             'langVar'   => 'lead.list',
+            'extraHtml' => '<a class="btn btn-default" href="'.$view['router']->path('mautic_segment_action', ['objectAction' => 'new', 'static' => 0]).'"><span>动态群组</span></a>
+                    <a class="btn btn-default" href="'.$view['router']->path('mautic_segment_action', ['objectAction' => 'new', 'static' => 1]).'"><span>静态群组</span></a>
+                    ',
         ]
     )
 );

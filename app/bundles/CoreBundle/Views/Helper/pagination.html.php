@@ -8,7 +8,7 @@
  *
  * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
-$target = (!empty($target)) ? $target : '.page-list';
+$target = (isset($target)) ? $target : '.page-list';
 $tmpl   = (!empty($tmpl)) ? $tmpl : 'list';
 
 if (empty($fixedPages)) {
@@ -188,19 +188,20 @@ foreach ($responsiveViewports as $viewport):
             </ul>
             <div class="clearfix"></div>
             <small class="text-muted">
+                <?php echo $view['translator']->trans(
+                    'mautic.core.pagination.total'
+                ); ?>：
                 <?php echo $view['translator']->transChoice(
                     'mautic.core.pagination.items',
                     $totalItems,
                     ['%count%' => $totalItems]
-                ); ?>,
+                ); ?>
                 <?php echo $view['translator']->transChoice(
                     'mautic.core.pagination.pages',
                     $totalPages,
                     ['%count%' => $totalPages]
                 ); ?>
-                <?php echo $view['translator']->trans(
-                    'mautic.core.pagination.total'
-                ); ?>
+
             </small>
         </div>
     </div>

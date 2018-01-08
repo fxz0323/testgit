@@ -171,6 +171,11 @@ class ReportSubscriber extends CommonSubscriber
                             'expr'   => 'like',
                             'value'  => 'lead',
                         ],
+                        [
+                            'column' => 'f.isPublished',
+                            'expr'   => 'like',
+                            'value'  => true,
+                        ],
                     ],
                 ],
             ]);

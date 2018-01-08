@@ -1630,17 +1630,23 @@ class LeadModel extends FormModel
     public function importLead($fields, $data, $owner = null, $list = null, $tags = null, $persist = true)
     {
         // Let's check for an existing lead by email
-        $hasEmail = (!empty($fields['email']) && !empty($data[$fields['email']]));
-        if ($hasEmail) {
+//        $hasEmail = (!empty($fields['email']) && !empty($data[$fields['email']]));
+        $hasMobile = (!empty($fields['mobile']) && !empty($data[$fields['mobile']]));
+        if ($hasMobile) {
             // Validate the email
-            MailHelper::validateEmail($data[$fields['email']]);
+//            MailHelper::validateEmail($data[$fields['email']]);
 
-            $leadFound = $this->getRepository()->getLeadByEmail($data[$fields['email']]);
-            $lead      = ($leadFound) ? $this->em->getReference('MauticLeadBundle:Lead', $leadFound['id']) : new Lead();
-            $merged    = $leadFound;
+            $leadFound = $this->getRepository()->getLeadByMobile($data[$fields['mobile']]);
+            $lead      = ($leadFound) ? $leadFound : new Lead();
+            $merged    = ($leadFound) ? true : false;
         } else {
             $lead   = new Lead();
             $merged = false;
+        }
+
+        //always set identified date
+        if(!$lead->getDateIdentified()) {
+            $lead->setDateIdentified(new \DateTime());
         }
 
         if (!empty($fields['dateAdded']) && !empty($data[$fields['dateAdded']])) {
@@ -1898,6 +1904,7 @@ class LeadModel extends FormModel
         $lead->imported = true;
 
         if ($persist) {
+            $lead->addUpdatedField('origin_from', '导入');
             $this->saveEntity($lead);
 
             if ($list !== null) {

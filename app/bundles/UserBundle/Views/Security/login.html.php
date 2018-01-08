@@ -24,7 +24,7 @@ endif;
         <label for="username" class="sr-only"><?php echo $view['translator']->trans('mautic.user.auth.form.loginusername'); ?></label>
         <input type="text" id="username" name="_username"
                class="form-control input-lg" value="<?php echo $last_username ?>" required autofocus
-               placeholder="<?php echo $view['translator']->trans('mautic.user.auth.form.loginusername'); ?>" />
+               placeholder="<?php echo $view['translator']->trans('mautic.user.auth.form.loginusername'); ?>" style="background-color: white;opacity: 1"/>
     </div>
     <div class="input-group mb-md">
         <span class="input-group-addon"><i class="fa fa-key"></i></span>
@@ -43,8 +43,9 @@ endif;
     </div>
 
     <input type="hidden" name="_csrf_token" value="<?php echo $view['form']->csrfToken('authenticate') ?>" />
-    <button class="btn btn-lg btn-primary btn-block" type="submit"><?php echo $view['translator']->trans('mautic.user.auth.form.loginbtn'); ?></button>
-
+    <button class="btn btn-lg btn-primary btn-block" type="submit" style="background-color: #4ABCB4">
+        <?php echo $view['translator']->trans('mautic.user.auth.form.loginbtn'); ?>
+    </button>
     <div class="mt-sm text-right">
         <a href="<?php echo $view['router']->path('mautic_user_passwordreset'); ?>"><?php echo $view['translator']->trans('mautic.user.user.passwordreset.link'); ?></a>
     </div>

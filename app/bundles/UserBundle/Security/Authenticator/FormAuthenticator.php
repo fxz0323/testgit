@@ -118,7 +118,7 @@ class FormAuthenticator implements SimpleFormAuthenticatorInterface
             $authenticated = true;
         }
 
-        if ($authenticated) {
+        if ($authenticated && $user->isActive()) {
             return new PluginToken(
                 $providerKey,
                 $authenticatingService,

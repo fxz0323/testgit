@@ -24,7 +24,7 @@
                         data-toggle="ajaxmodal"
                         data-target="#MauticSharedModal"
                         data-header="<?php echo $view['translator']->trans('mautic.dashboard.widget.header.edit'); ?>">
-                        <i class="fa fa-pencil"></i> Edit
+                        <i class="fa fa-pencil"></i> <?php echo $view['translator']->trans('mautic.dashboard.widget.click.edit'); ?>
                     </a>
                 </li>
                 <li role="separator" class="divider"></li>
@@ -43,13 +43,14 @@
                     <a  href="<?php echo $view['router']->generate('mautic_dashboard_action', ['objectAction' => 'delete', 'objectId' => $widget->getId()]); ?>"
                         data-header="<?php echo $view['translator']->trans('mautic.dashboard.widget.header.delete'); ?>"
                         class="remove-widget">
-                        <i class="fa fa-remove"></i> Remove
+                        <i class="fa fa-remove"></i><?php echo $view['translator']->trans('mautic.dashboard.widget.click.delete'); ?>
                     </a>
                 </li>
             </ul>
         </div>
         <?php endif; ?>
     </div>
+<!--控件列表-->
     <div class="card-body">
         <?php if ($widget->getErrorMessage()) : ?>
             <div class="alert alert-danger" role="alert">

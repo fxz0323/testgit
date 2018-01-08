@@ -57,6 +57,10 @@ return [
                 'path'       => '/users/{page}',
                 'controller' => 'MauticUserBundle:User:index',
             ],
+            'mautic_user_applicants' => [
+                'path'       => '/users/applicants/{page}',
+                'controller' => 'MauticUserBundle:User:applicants',
+            ],
             'mautic_user_action' => [
                 'path'       => '/users/{objectAction}/{objectId}',
                 'controller' => 'MauticUserBundle:User:execute',
@@ -74,7 +78,7 @@ return [
                 'controller' => 'MauticUserBundle:Profile:index',
             ],
             'mautic_user_add_field' => [
-                'path'       => '/users/{id}/add-field',
+                'path'       => '/addfield',
                 'controller' => 'MauticUserBundle:User:addField',
             ],
         ],

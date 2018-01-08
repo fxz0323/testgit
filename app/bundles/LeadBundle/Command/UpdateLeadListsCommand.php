@@ -75,6 +75,10 @@ class UpdateLeadListsCommand extends ModeratedCommand
                 // Get first item; using reset as the key will be the ID and not 0
                 $l = reset($l);
 
+                if($l->isStatic()) {
+                    continue;
+                }
+
                 $output->writeln('<info>'.$translator->trans('mautic.lead.list.rebuild.rebuilding', ['%id%' => $l->getId()]).'</info>');
 
                 $processed = $listModel->rebuildListLeads($l, $batch, $max, $output);

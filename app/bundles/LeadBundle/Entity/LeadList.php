@@ -55,6 +55,8 @@ class LeadList extends FormEntity
      */
     private $isGlobal = true;
 
+    private $isStatic = false;
+
     /**
      * @var ArrayCollection
      */
@@ -86,6 +88,10 @@ class LeadList extends FormEntity
 
         $builder->createField('isGlobal', 'boolean')
             ->columnName('is_global')
+            ->build();
+
+        $builder->createField('isStatic', 'boolean')
+            ->columnName('is_static')
             ->build();
 
         $builder->createOneToMany('leads', 'ListLead')
@@ -289,4 +295,22 @@ class LeadList extends FormEntity
     {
         return $this->leads;
     }
+
+    /**
+     * @return bool
+     */
+    public function isStatic()
+    {
+        return $this->isStatic;
+    }
+
+    /**
+     * @param bool $isStatic
+     */
+    public function setIsStatic($isStatic)
+    {
+        $this->isStatic = $isStatic;
+    }
+
+
 }

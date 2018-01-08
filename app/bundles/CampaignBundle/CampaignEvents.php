@@ -50,7 +50,7 @@ final class CampaignEvents
     /**
      * The mautic.campaign_post_delete event is dispatched after a form is deleted.
      *
-     * The event listener receives a
+     * The event listener receives aCAMPAIGN_ON_BUILD
      * Mautic\CampaignBundle\Event\CampaignEvent instance.
      *
      * @var string

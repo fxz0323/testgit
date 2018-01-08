@@ -1,6 +1,6 @@
 <?php
 
-/*
+/*评分的添加与编辑
  * @copyright   2014 Mautic Contributors. All rights reserved
  * @author      Mautic
  *
@@ -33,6 +33,7 @@ $view['slots']->set('headerTitle', $header);
                 <!--/ tabs controls -->
 
                 <div class="tab-content pa-md">
+                    <!--添加或修改 表单 start-->
                     <div class="tab-pane fade in active bdr-w-0 height-auto" id="details-container">
                         <div class="row">
                             <div class="col-md-6">
@@ -54,7 +55,6 @@ $view['slots']->set('headerTitle', $header);
                             </div>
                         </div>
                     </div>
-
                     <div class="tab-pane fade bdr-w-0" id="events-container">
                         <div id="triggerEvents">
                             <div class="mb-md">

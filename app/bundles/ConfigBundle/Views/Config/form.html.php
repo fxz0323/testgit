@@ -100,13 +100,13 @@ $configKeys = array_keys($form->children);
                                         <?php foreach ($weixins as $weixin) : ?>
                                         <tr>
                                             <td>
-                                                <img src="<?php $weixin->getIcon(); ?>">
+                                                <img style="max-height:80px;" src="<?php echo $weixin->getIcon(); ?>">
                                                 <?php echo $weixin->getAccountName(); ?>
                                             </td>
                                             <td><?php echo $weixin->getTypeText(); ?></td>
                                             <td><?php echo $weixin->getVerifiedText(); ?></td>
-                                            <td><?php echo $weixin->getCreateTime() ? $weixin->getCreateTime()->format('Y-m-d H:s:i'):''; ?></td>
-                                            <td><a><i class="fa fa-chain-broken"></i></a></td>
+                                            <td><?php echo $weixin->getCreateTime() ? $weixin->getCreateTime()->format('Y-m-d H:i:s'):''; ?></td>
+                                            <td><a href="<?php echo $view['router']->path('mautic_weixin_open_unlink', ['id' => $weixin->getId()] ) ?>"><i class="fa fa-chain-broken"></i></a></td>
                                         </tr>
                                         <?php endforeach; ?>
                                     </table>

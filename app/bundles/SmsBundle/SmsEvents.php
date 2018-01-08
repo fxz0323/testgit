@@ -86,4 +86,6 @@ final class SmsEvents
      * @var string
      */
     const ON_CAMPAIGN_TRIGGER_ACTION = 'mautic.sms.on_campaign_trigger_action';
+
+    const SMS_ON_CLICK_URL = 'mautic.sms_on_url_click';
 }

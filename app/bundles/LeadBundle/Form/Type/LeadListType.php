@@ -14,6 +14,7 @@ namespace Mautic\LeadBundle\Form\Type;
 use Mautic\CoreBundle\Factory\MauticFactory;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\OptionsResolver\Options;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 
 /**
@@ -44,13 +45,19 @@ class LeadListType extends AbstractType
 
                 $choices = [];
                 foreach ($lists as $l) {
-                    $choices[$l['id']] = $l['name'];
+                    if($options['static_only']) {
+                        if($l['isStatic']) {
+                            $choices[$l['id']] = $l['name'];
+                        }
+                    }else{
+                        $choices[$l['id']] = $l['name'];
+                    }
                 }
-
                 return $choices;
             },
             'global_only' => false,
             'required'    => false,
+            'static_only'    => true,
         ]);
     }
 

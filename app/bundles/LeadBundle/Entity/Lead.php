@@ -237,6 +237,10 @@ class Lead extends FormEntity implements CustomFieldEntityInterface
      */
     private $channelRules = [];
 
+    private $weixinActions;
+
+    private $leadOrders;
+
     /**
      * Constructor.
      */
@@ -250,6 +254,8 @@ class Lead extends FormEntity implements CustomFieldEntityInterface
         $this->stageChangeLog   = new ArrayCollection();
         $this->frequencyRules   = new ArrayCollection();
         $this->companyChangeLog = new ArrayCollection();
+        $this->weixinActions = new ArrayCollection();
+        $this->leadOrders = new ArrayCollection();
     }
 
     /**
@@ -391,6 +397,20 @@ class Lead extends FormEntity implements CustomFieldEntityInterface
                 ->cascadeAll()
                 ->fetchExtraLazy()
                 ->build();
+
+        $builder->createOneToMany('weixinActions', 'MauticPlugin\WeixinBundle\Entity\LeadWeixinAction')
+            ->orphanRemoval()
+            ->mappedBy('contact')
+            ->cascadeAll()
+            ->fetchExtraLazy()
+            ->build();
+
+        $builder->createOneToMany('leadOrders', 'LeadOrder')
+            ->orphanRemoval()
+            ->mappedBy('contact')
+            ->cascadeAll()
+            ->fetchExtraLazy()
+            ->build();
 
         self::loadFixedFieldMetadata(
             $builder,
@@ -706,6 +726,8 @@ class Lead extends FormEntity implements CustomFieldEntityInterface
     {
         if ($name = $this->getName($lastFirst)) {
             return $name;
+        } elseif ($this->getMobile()) {
+            return $this->getMobile();
         } elseif ($this->getCompany()) {
             return $this->getCompany();
         } elseif ($this->getEmail()) {
@@ -1903,4 +1925,39 @@ class Lead extends FormEntity implements CustomFieldEntityInterface
 
         return $rules;
     }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getWeixinActions()
+    {
+        return $this->weixinActions;
+    }
+
+    /**
+     * @param ArrayCollection $weixinActions
+     */
+    public function setWeixinActions($weixinActions)
+    {
+        $this->weixinActions = $weixinActions;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getLeadOrders()
+    {
+        return $this->leadOrders;
+    }
+
+    /**
+     * @param ArrayCollection $leadOrders
+     */
+    public function setLeadOrders($leadOrders)
+    {
+        $this->leadOrders = $leadOrders;
+    }
+
+
+
 }

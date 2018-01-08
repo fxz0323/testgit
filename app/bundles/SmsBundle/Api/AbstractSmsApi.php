@@ -44,7 +44,7 @@ abstract class AbstractSmsApi
 
     /**
      * Convert a non-tracked url to a tracked url.
-     *
+     *将未跟踪的网址转换为跟踪的网址
      * @param string $url
      * @param array  $clickthrough
      *

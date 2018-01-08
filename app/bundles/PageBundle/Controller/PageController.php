@@ -1034,4 +1034,21 @@ class PageController extends FormController
         <?php
         $slotsHelper->stop();
     }
+
+    public function qrcodeAction($id)
+    {
+        $model  = $this->getModel('page.page');
+        $page = $model->getEntity($id);
+
+        return $this->delegateView([
+            'viewParameters' => [
+                'activePage' => $page,
+                'pageUrl'       => $model->generateUrl($page, true),
+            ],
+            'contentTemplate' => 'MauticPageBundle:Page:qrcode.html.php',
+            'passthroughVars' => [
+
+            ],
+        ]);
+    }
 }

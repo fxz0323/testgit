@@ -34,89 +34,55 @@ class News
      */
     private $id;
 
-    private $title;
+    private $weixin;
 
-    private $thumbMediaId;
-
-    private $thumbMedia;
-
-    private $showCoverPic;
-
-    private $author;
-
-    private $digest;
-
-    private $content;
-
-    private $url;
-
-    private $contentSourceUrl;
+    private $mediaId;
 
     private $updateTime;
+
+    private $items;
+
+    private $histories;
 
     public function __construct()
     {
 
     }
 
-    /**
-     * @param ORM\ClassMetadata $metadata
-     */
     public static function loadMetadata(ORM\ClassMetadata $metadata)
     {
         $builder = new ClassMetadataBuilder($metadata);
 
-        $builder->setTable('weixin_news');
+        $builder->setTable('weixin_news')
+            ->setCustomRepositoryClass('MauticPlugin\WeixinBundle\Entity\NewsRepository');;
 
         $builder->addId();
-
-        $builder->createField('title', 'string')
-            ->columnName('type')
-            ->build();
-
-        $builder->createField('thumbMediaId', 'integer')
-            ->columnName('thumb_media_id')
-            ->nullable()
-            ->build();
-
-        $builder->createField('thumbMedia', 'string')
-            ->columnName('thumb_media')
-            ->nullable()
-            ->build();
-
-        $builder->createField('showCoverPic', 'boolean')
-            ->columnName('show_cover_pic')
-            ->nullable()
-            ->build();
-
-        $builder->createField('author', 'string')
-            ->columnName('author')
-            ->nullable()
-            ->build();
-
-        $builder->createField('digest', 'string')
-            ->columnName('digest')
-            ->nullable()
-            ->build();
-
-        $builder->createField('content', 'text')
-            ->columnName('content')
-            ->nullable()
-            ->build();
-
-        $builder->createField('url', 'string')
-            ->columnName('url')
-            ->nullable()
-            ->build();
-
-        $builder->createField('contentSourceUrl', 'string')
-            ->columnName('content_source_url')
-            ->nullable()
-            ->build();
 
         $builder->createField('updateTime', 'datetime')
             ->columnName('update_time')
             ->nullable()
+            ->build();
+
+        $builder->createField('mediaId', 'string')
+            ->columnName('media_id')
+            ->build();
+
+        $builder->createManyToOne('weixin', 'Weixin')
+            ->addJoinColumn('weixin_id', 'id', false, false, 'CASCADE')
+            ->build();
+
+        $builder->createOneToMany('items', 'NewsItem')
+            ->setIndexBy('id')
+            ->mappedBy('news')
+            ->cascadePersist()
+            ->fetchExtraLazy()
+            ->build();
+
+        $builder->createOneToMany('histories', 'NewsHistory')
+            ->setIndexBy('id')
+            ->mappedBy('news')
+            ->cascadePersist()
+            ->fetchExtraLazy()
             ->build();
     }
 
@@ -139,145 +105,33 @@ class News
     /**
      * @return mixed
      */
-    public function getTitle()
+    public function getWeixin()
     {
-        return $this->title;
+        return $this->weixin;
     }
 
     /**
-     * @param mixed $title
+     * @param mixed $weixin
      */
-    public function setTitle($title)
+    public function setWeixin($weixin)
     {
-        $this->title = $title;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getThumbMediaId()
-    {
-        return $this->thumbMediaId;
-    }
-
-    /**
-     * @param mixed $thumbMediaId
-     */
-    public function setThumbMediaId($thumbMediaId)
-    {
-        $this->thumbMediaId = $thumbMediaId;
+        $this->weixin = $weixin;
     }
 
     /**
      * @return mixed
      */
-    public function getThumbMedia()
+    public function getMediaId()
     {
-        return $this->thumbMedia;
+        return $this->mediaId;
     }
 
     /**
-     * @param mixed $thumbMedia
+     * @param mixed $mediaId
      */
-    public function setThumbMedia($thumbMedia)
+    public function setMediaId($mediaId)
     {
-        $this->thumbMedia = $thumbMedia;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getShowCoverPic()
-    {
-        return $this->showCoverPic;
-    }
-
-    /**
-     * @param mixed $showCoverPic
-     */
-    public function setShowCoverPic($showCoverPic)
-    {
-        $this->showCoverPic = $showCoverPic;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getAuthor()
-    {
-        return $this->author;
-    }
-
-    /**
-     * @param mixed $author
-     */
-    public function setAuthor($author)
-    {
-        $this->author = $author;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getDigest()
-    {
-        return $this->digest;
-    }
-
-    /**
-     * @param mixed $digest
-     */
-    public function setDigest($digest)
-    {
-        $this->digest = $digest;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getContent()
-    {
-        return $this->content;
-    }
-
-    /**
-     * @param mixed $content
-     */
-    public function setContent($content)
-    {
-        $this->content = $content;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getUrl()
-    {
-        return $this->url;
-    }
-
-    /**
-     * @param mixed $url
-     */
-    public function setUrl($url)
-    {
-        $this->url = $url;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getContentSourceUrl()
-    {
-        return $this->contentSourceUrl;
-    }
-
-    /**
-     * @param mixed $contentSourceUrl
-     */
-    public function setContentSourceUrl($contentSourceUrl)
-    {
-        $this->contentSourceUrl = $contentSourceUrl;
+        $this->mediaId = $mediaId;
     }
 
     /**
@@ -296,5 +150,36 @@ class News
         $this->updateTime = $updateTime;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getItems()
+    {
+        return $this->items;
+    }
+
+    /**
+     * @param mixed $items
+     */
+    public function setItems($items)
+    {
+        $this->items = $items;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getHistories()
+    {
+        return $this->histories;
+    }
+
+    /**
+     * @param mixed $histories
+     */
+    public function setHistories($histories)
+    {
+        $this->histories = $histories;
+    }
 
 }

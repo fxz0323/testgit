@@ -1,6 +1,6 @@
 <?php
 
-/*
+/*控件添加或编辑
  * @copyright   2014 Mautic Contributors. All rights reserved
  * @author      Mautic
  *

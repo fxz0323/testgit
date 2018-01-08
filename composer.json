@@ -111,8 +111,8 @@
         "egeloen/ordered-form-bundle": "^3.0",
         "chxj1992/yimei-sms": "1.0",
         "picqer/sendcloud-php-client": "^2.3",
-        "chunhei2008/easy-open-wechat": "1.0.2",
-        "overtrue/wechat": "3.3.17"
+        "overtrue/wechat": "3.3.17",
+        "endroid/qrcode": "2.4.0"
     },
     "require-dev": {
         "symfony/web-profiler-bundle": "~2.8",

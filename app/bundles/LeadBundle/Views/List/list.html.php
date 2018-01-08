@@ -48,6 +48,16 @@ $listCommand = $view['translator']->trans('mautic.lead.lead.searchcommand.list')
                     'MauticCoreBundle:Helper:tableheader.html.php',
                     [
                         'sessionVar' => 'segment',
+                        'orderBy'    => 'l.isStatic',
+                        'text'       => 'mautic.core.static',
+                        'class'      => 'col-leadlist-name',
+                    ]
+                );
+
+                echo $view->render(
+                    'MauticCoreBundle:Helper:tableheader.html.php',
+                    [
+                        'sessionVar' => 'segment',
                         'text'       => 'mautic.lead.list.thead.leadcount',
                         'class'      => 'visible-md visible-lg col-leadlist-leadcount',
                     ]
@@ -80,7 +90,7 @@ $listCommand = $view['translator']->trans('mautic.lead.lead.searchcommand.list')
                                 ],
                                 'routeBase' => 'segment',
                                 'langVar'   => 'lead.list',
-                                'custom'    => [
+                                'customButtons'    => [
                                     [
                                         'attr' => [
                                             'data-toggle' => 'ajax',
@@ -91,8 +101,8 @@ $listCommand = $view['translator']->trans('mautic.lead.lead.searchcommand.list')
                                                 ]
                                             ),
                                         ],
-                                        'icon'  => 'fa-users',
-                                        'label' => 'mautic.lead.list.view_leads',
+                                        'iconClass'  => 'fa fa-users',
+                                        'btnText' => 'mautic.lead.list.view_leads',
                                     ],
                                 ],
                             ]
@@ -128,6 +138,9 @@ $listCommand = $view['translator']->trans('mautic.lead.lead.searchcommand.list')
                                 <small><?php echo $description; ?></small>
                             </div>
                         <?php endif; ?>
+                    </td>
+                    <td>
+                        <?php echo $item->isStatic() ? '静态群组' : '动态群组'; ?>
                     </td>
                     <td class="visible-md visible-lg">
                         <a class="label label-primary" href="<?php echo $view['router']->path(

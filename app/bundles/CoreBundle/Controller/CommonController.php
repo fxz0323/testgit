@@ -728,7 +728,7 @@ class CommonController extends Controller implements MauticController
         if ($title !== null) {
             $title = $translator->trans($title);
         } else {
-            $title = 'Mautic';
+            $title = 'Linkall';
         }
 
         if ($icon == null) {

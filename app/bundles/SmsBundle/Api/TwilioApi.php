@@ -74,7 +74,7 @@ class TwilioApi extends AbstractSmsApi
         return $util->format($parsed, PhoneNumberFormat::E164);
     }
 
-    /**
+    /**发送信息
      * @param string $number
      * @param string $content
      *

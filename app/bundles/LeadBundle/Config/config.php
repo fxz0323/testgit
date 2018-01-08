@@ -90,6 +90,10 @@ return [
                 'path'       => '/companies/{objectAction}/{objectId}',
                 'controller' => 'MauticLeadBundle:Company:execute',
             ],
+            'mautic_import_order_action' => [
+                'path'       => '/import-order',
+                'controller' => 'MauticLeadBundle:Lead:importOrder',
+            ],
         ],
         'api' => [
             'mautic_api_contactsstandard' => [
@@ -279,6 +283,7 @@ return [
                 'arguments' => [
                     'mautic.helper.ip_lookup',
                     'mautic.core.model.auditlog',
+                    'mautic.lead.model.list'
                 ],
                 'methodCalls' => [
                     'setModelFactory' => ['mautic.model.factory'],
@@ -378,6 +383,8 @@ return [
                     'mautic.stage.model.stage',
                     'mautic.category.model.category',
                     'mautic.helper.user',
+                    'doctrine',
+                    'security.token_storage'
                 ],
                 'alias' => 'leadlist',
             ],
@@ -549,6 +556,10 @@ return [
             'mautic.form.type.company_change_score' => [
                 'class' => 'Mautic\LeadBundle\Form\Type\CompanyChangeScoreActionType',
                 'alias' => 'scorecontactscompanies_action',
+            ],
+            'mautic.form.type.campaignevent_order' => [
+                'class' => 'Mautic\LeadBundle\Form\Type\CampaignEventOrderType',
+                'alias' => 'campaignevent_order',
             ],
         ],
         'other' => [

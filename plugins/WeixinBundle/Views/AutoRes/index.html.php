@@ -17,7 +17,7 @@ $view['slots']->set(
     $view->render(
         'WeixinBundle:Common:switcher.html.php',
         [
-            'currentWeixin' => $currentWeixin,
+            'currentWeixin' => $currentWeixin,'weixins' => $weixins,
         ]
     )
 );

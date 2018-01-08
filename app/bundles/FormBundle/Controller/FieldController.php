@@ -137,6 +137,8 @@ class FieldController extends CommonFormController
             'route'         => false,
         ];
 
+
+
         if (!empty($keyId)) {
             //prevent undefined errors
             $entity    = new Field();
@@ -154,6 +156,7 @@ class FieldController extends CommonFormController
                     'id'            => $keyId,
                     'formId'        => $formId,
                     'contactFields' => $this->getModel('lead.field')->getFieldListWithProperties(),
+                    'userFields' => $this->getModel('lead.field')->getFieldListWithProperties('user'),
                 ]
             );
         }

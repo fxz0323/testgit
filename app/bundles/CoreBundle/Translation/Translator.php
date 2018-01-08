@@ -20,12 +20,12 @@ class Translator extends BaseTranslator
 {
     /**
      * Check if the specified message ID exists.
-     *
-     * @param string      $id     The message id (may also be an object that can be cast to string)
+     *检查指定的消息ID是否存在。
+     * @param string      $id     The message id (may also be an object that can be cast to string | 也可能是一个可以转换为字符串的对象)
      * @param string|null $domain The domain for the message or null to use the default
      * @param string|null $locale The locale or null to use the default
      *
-     * @return bool true if the message has a translation, false otherwise
+     * @return bool true if the message has a translation, false otherwise 如果消息有翻译则返回true，否则返回false
      */
     public function hasId($id, $domain = null, $locale = null)
     {

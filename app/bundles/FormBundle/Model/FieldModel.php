@@ -85,6 +85,32 @@ class FieldModel extends CommonFormModel
         $options['leadFields']          = $choices;
         $options['leadFieldProperties'] = $fields;
 
+        $fields  = $this->leadFieldModel->getFieldListWithProperties('user');
+        $choices = [];
+
+        foreach ($fields as $alias => $field) {
+            if (!isset($choices[$field['group_label']])) {
+                $choices[$field['group_label']] = [];
+            }
+
+            $choices[$field['group_label']][$alias] = $field['label'];
+        }
+
+        // Only show the lead fields not already used
+        $usedLeadFields   = $this->session->get('mautic.form.'.$entity['formId'].'.fields.userfields', []);
+        $testLeadFields   = array_flip($usedLeadFields);
+        $currentLeadField = (isset($entity['userField'])) ? $entity['userField'] : null;
+        if (!empty($currentLeadField) && isset($testLeadFields[$currentLeadField])) {
+            unset($testLeadFields[$currentLeadField]);
+        }
+
+        foreach ($choices as &$group) {
+            $group = array_diff_key($group, $testLeadFields);
+        }
+
+        $options['userFields']          = $choices;
+        $options['userFieldProperties'] = $fields;
+
         if ($action) {
             $options['action'] = $action;
         }

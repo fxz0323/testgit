@@ -19,6 +19,14 @@ class MenuController extends BaseController
     public function indexAction()
     {
         $currentWeixin = $this->getCurrentWeixin();
+        if(null == $currentWeixin) {
+            return $this->redirectToRoute('mautic_weixin_settings');
+        }
+
+        if (!$currentWeixin->getMenus()->last()) {
+            $this->get('weixin.api')->initMenu($currentWeixin);
+        }
+
         if ($currentWeixin->getMenus()->last()) {
             $id = $currentWeixin->getMenus()->last()->getId();
         } else {
@@ -40,6 +48,9 @@ class MenuController extends BaseController
             $currentWeixin->addMenu($menu);
         } else {
             $menu = $em->getRepository('MauticPlugin\WeixinBundle\Entity\Menu')->find($id);
+            if($menu->getWeixin() !== $currentWeixin){
+                return $this->redirectToRoute('mautic_weixin_menu');
+            }
         }
 
         $form = $this->createForm(MenuType::class, $menu, [
@@ -50,8 +61,9 @@ class MenuController extends BaseController
         if ($form->isSubmitted() && $form->isValid()) {
             if ($menu->getType() == Menu::MENU_TYPE_URL) {
                 $menu->setMessage(null);
-            } else {
-                $this->get('weixin.helper.message')->handleMessageImage($menu->getMessage(), $form->get('message')->get('file')->getData());
+            }
+            if ($menu->getType() == Menu::MENU_TYPE_MESSAGE) {
+                $this->get('weixin.helper.message')->handleMessageImage($currentWeixin, $menu->getMessage(), $form->get('message')->get('file')->getData());
                 $em->persist($menu->getMessage());
             }
 
@@ -98,7 +110,7 @@ class MenuController extends BaseController
             if ($menuItem->getType() == Menu::MENU_TYPE_URL) {
                 $menuItem->setMessage(null);
             } else {
-                $this->get('weixin.helper.message')->handleMessageImage($menuItem->getMessage(), $form->get('message')->get('file')->getData());
+                $this->get('weixin.helper.message')->handleMessageImage($currentWeixin, $menuItem->getMessage(), $form->get('message')->get('file')->getData());
                 $em->persist($menuItem->getMessage());
             }
 
@@ -147,9 +159,12 @@ class MenuController extends BaseController
     public function updateMenuAction()
     {
         $currentWeixin = $this->getCurrentWeixin();
-        $this->get('weixin.api')->updateMenu($currentWeixin);
 
-        $this->get('session')->getFlashBag()->set('info', '同步菜单成功');
+        if ($this->get('weixin.api')->updateMenu($currentWeixin)) {
+            $this->get('session')->getFlashBag()->set('notice', '同步菜单成功');
+        } else {
+            $this->get('session')->getFlashBag()->set('error', '同步菜单失败');
+        }
 
         return $this->redirectToRoute('mautic_weixin_menu');
     }

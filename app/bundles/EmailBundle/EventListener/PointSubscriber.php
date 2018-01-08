@@ -50,6 +50,7 @@ class PointSubscriber extends CommonSubscriber
             PointEvents::TRIGGER_ON_BUILD => ['onTriggerBuild', 0],
             EmailEvents::EMAIL_ON_OPEN    => ['onEmailOpen', 0],
             EmailEvents::EMAIL_ON_SEND    => ['onEmailSend', 0],
+            EmailEvents::EMAIL_ON_CLICK_URL    => ['onEmailClickUrl', 0],
         ];
     }
 
@@ -73,8 +74,15 @@ class PointSubscriber extends CommonSubscriber
             'callback' => ['\\Mautic\\EmailBundle\\Helper\\PointEventHelper', 'validateEmail'],
             'formType' => 'emailopen_list',
         ];
-
         $event->addAction('email.send', $action);
+
+        $action = [
+            'group'    => 'mautic.email.actions',
+            'label'    => 'mautic.email.point.action.url',
+            'formType' => 'emailopen_list',
+        ];
+
+        $event->addAction('email.url', $action);
     }
 
     /**
@@ -102,6 +110,11 @@ class PointSubscriber extends CommonSubscriber
     public function onEmailOpen(EmailOpenEvent $event)
     {
         $this->pointModel->triggerAction('email.open', $event->getEmail());
+    }
+
+    public function onEmailClickUrl(EmailOpenEvent $event)
+    {
+        $this->pointModel->triggerAction('email.url', $event->getEmail());
     }
 
     /**

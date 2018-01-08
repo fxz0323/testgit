@@ -73,28 +73,8 @@
                         <div class="small"><?php echo $item->getSecondaryIdentifier(); ?></div>
                     </a>
                 </td>
+                <td class="visible-md visible-lg"><?php echo $fields['core']['mobile']['value'] ? $fields['core']['mobile']['value']:$fields['core']['phone']['value']; ?></td>
                 <td class="visible-md visible-lg"><?php echo $fields['core']['email']['value']; ?></td>
-                <td class="visible-md visible-lg">
-                    <?php
-                    $flag = (!empty($fields['core']['country'])) ? $view['assets']->getCountryFlag($fields['core']['country']['value']) : '';
-                    if (!empty($flag)):
-                    ?>
-                    <img src="<?php echo $flag; ?>" style="max-height: 24px;" class="mr-sm" />
-                    <?php
-                    endif;
-                    $location = [];
-                    if (!empty($fields['core']['city']['value'])):
-                        $location[] = $fields['core']['city']['value'];
-                    endif;
-                    if (!empty($fields['core']['state']['value'])):
-                        $location[] = $fields['core']['state']['value'];
-                    elseif (!empty($fields['core']['country']['value'])):
-                        $location[] = $fields['core']['country']['value'];
-                    endif;
-                    echo implode(', ', $location);
-                    ?>
-                    <div class="clearfix"></div>
-                </td>
                 <td class="text-center">
                     <?php
                     $color = $item->getColor();
@@ -112,9 +92,7 @@
                     <span class="label label-default"<?php echo $style; ?>><?php echo $item->getPoints(); ?></span>
                 </td>
                 <td class="visible-md visible-lg">
-                    <abbr title="<?php echo $view['date']->toFull($item->getLastActive()); ?>">
-                        <?php echo $view['date']->toText($item->getLastActive()); ?>
-                    </abbr>
+                    <?php echo ''; ?>
                 </td>
                 <td class="visible-md visible-lg"><?php echo $item->getId(); ?></td>
             </tr>

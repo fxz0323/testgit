@@ -129,7 +129,7 @@ endif;
                 <td class="visible-md visible-lg">
                     <a href="mailto: <?php echo $item->getEmail(); ?>"><?php echo $item->getEmail(); ?></a>
                 </td>
-                <td class="visible-md visible-lg"><?php echo $item->getRole()->getName(); ?></td>
+                <td class="visible-md visible-lg"><?php echo $item->getRole() ? $item->getRole()->getName() : ''; ?></td>
                 <td class="visible-md visible-lg"><?php echo $item->getId(); ?></td>
             </tr>
         <?php endforeach; ?>

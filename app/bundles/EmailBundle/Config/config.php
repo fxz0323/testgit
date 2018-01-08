@@ -124,6 +124,7 @@ return [
                     'mautic.email.model.email',
                     'mautic.campaign.model.event',
                     'mautic.channel.model.queue',
+                    'doctrine'
                 ],
             ],
             'mautic.email.formbundle.subscriber' => [
@@ -228,6 +229,11 @@ return [
                 'arguments' => 'mautic.factory',
                 'alias'     => 'emailsend_list',
             ],
+            'mautic.form.type.emailsendinternal_list' => [
+                'class'     => 'Mautic\EmailBundle\Form\Type\EmailSendInternalType',
+                'arguments' => 'mautic.factory',
+                'alias'     => 'emailsendinternal_list',
+            ],
             'mautic.form.type.formsubmit_sendemail_admin' => [
                 'class' => 'Mautic\EmailBundle\Form\Type\FormSubmitActionUserEmailType',
                 'alias' => 'email_submitaction_useremail',
@@ -258,6 +264,14 @@ return [
             'mautic.form.type.email_dashboard_emails_in_time_widget' => [
                 'class' => 'Mautic\EmailBundle\Form\Type\DashboardEmailsInTimeWidgetType',
                 'alias' => 'email_dashboard_emails_in_time_widget',
+            ],
+            'mautic.form.type.campaignevent_email' => [
+                'class' => 'Mautic\EmailBundle\Form\Type\CampaignEventEmailType',
+                'arguments' => [
+                    '@security.token_storage',
+                    '@doctrine'
+                ],
+                'alias' => 'campaignevent_email',
             ],
         ],
         'other' => [

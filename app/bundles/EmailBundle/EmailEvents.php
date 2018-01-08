@@ -174,4 +174,6 @@ final class EmailEvents
      * @var string
      */
     const ON_CAMPAIGN_TRIGGER_DECISION = 'mautic.email.on_campaign_trigger_decision';
+
+    const EMAIL_ON_CLICK_URL = 'mautic.email_on_url_click';
 }

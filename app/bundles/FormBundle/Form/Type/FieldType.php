@@ -384,6 +384,50 @@ class FieldType extends AbstractType
                     'data'     => $data,
                 ]
             );
+
+
+            if (!isset($options['data']['userField'])) {
+                switch ($type) {
+                    case 'email':
+                        $data = 'email';
+                        break;
+                    case 'country':
+                        $data = 'country';
+                        break;
+                    case 'tel':
+                        $data = 'phone';
+                        break;
+                    default:
+                        $data = '';
+                        break;
+                }
+            } elseif (isset($options['data']['userField'])) {
+                $data = $options['data']['userField'];
+            } else {
+                $data = '';
+            }
+
+            $builder->add(
+                'userField',
+                'choice',
+                [
+                    'choices'     => $options['userFields'],
+                    'choice_attr' => function ($val, $key, $index) use ($options) {
+                        if (!empty($options['userFieldProperties'][$val]) && (in_array($options['userFieldProperties'][$val]['type'], FormFieldHelper::getListTypes()) || !empty($options['userFieldProperties'][$val]['properties']['list']) || !empty($options['userFieldProperties'][$val]['properties']['optionlist']))) {
+                            return ['data-list-type' => 1];
+                        }
+
+                        return [];
+                    },
+                    'label'      => 'mautic.form.field.form.user_field',
+                    'label_attr' => ['class' => 'control-label'],
+                    'attr'       => [
+                        'class'   => 'form-control',
+                    ],
+                    'required' => false,
+                    'data'     => $data,
+                ]
+            );
         }
 
         $builder->add('type', 'hidden');
@@ -526,9 +570,10 @@ class FieldType extends AbstractType
             ]
         );
 
-        $resolver->setOptional(['customParameters', 'leadFieldProperties']);
+        $resolver->setOptional(['customParameters', 'leadFieldProperties', 'userFieldProperties']);
 
         $resolver->setRequired(['leadFields']);
+        $resolver->setRequired(['userFields']);
     }
 
     /**

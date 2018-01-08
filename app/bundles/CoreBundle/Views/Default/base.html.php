@@ -13,31 +13,31 @@
 <html>
     <?php echo $view->render('MauticCoreBundle:Default:head.html.php'); ?>
     <body class="header-fixed">
-        <!-- start: app-wrapper -->
+        <!-- start: app-wrapper 引用程序包start-->
         <section id="app-wrapper">
             <?php $view['assets']->outputScripts('bodyOpen'); ?>
 
-            <!-- start: app-sidebar(left) -->
+            <!-- start: app-sidebar(left) 左侧边栏-->
             <aside class="app-sidebar sidebar-left">
                 <?php echo $view->render('MauticCoreBundle:LeftPanel:index.html.php'); ?>
             </aside>
-            <!--/ end: app-sidebar(left) -->
+            <!--/ end: app-sidebar(left) 左侧边栏-->
 
-            <!-- start: app-sidebar(right) -->
+            <!-- start: app-sidebar(right) 右侧边栏-->
             <aside class="app-sidebar sidebar-right">
                 <?php echo $view->render('MauticCoreBundle:RightPanel:index.html.php'); ?>
             </aside>
-            <!--/ end: app-sidebar(right) -->
+            <!--/ end: app-sidebar(right) 右侧边栏-->
 
-            <!-- start: app-header -->
+            <!-- start: app-header 导航栏start-->
             <header id="app-header" class="navbar">
                <?php echo $view->render('MauticCoreBundle:Default:navbar.html.php'); ?>
 
                <?php echo $view->render('MauticCoreBundle:Notification:flashes.html.php'); ?>
             </header>
-            <!--/ end: app-header -->
+            <!--/ end: app-header 导航栏end-->
 
-            <!-- start: app-footer(need to put on top of #app-content)-->
+            <!-- start: app-footer(need to put on top of #app-content) 底部start-->
             <footer id="app-footer">
                 <div class="container-fluid">
                     <div class="row">
@@ -46,16 +46,16 @@
                     </div>
                 </div>
             </footer>
-            <!--/ end: app-content -->
+            <!--/ end: app-content 底部end-->
 
-            <!-- start: app-content -->
+            <!-- start: app-content 中间内容start-->
             <section id="app-content">
                 <?php $view['slots']->output('_content'); ?>
             </section>
-            <!--/ end: app-content -->
+            <!--/ end: app-content 中间内容end-->
 
         </section>
-        <!--/ end: app-wrapper -->
+        <!--/ end: app-wrapper 引用程序包end -->
 
         <script>
             Mautic.onPageLoad('body');

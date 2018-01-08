@@ -17,7 +17,7 @@ $view['slots']->set(
     $view->render(
         'WeixinBundle:Common:switcher.html.php',
         [
-            'currentWeixin' => $currentWeixin,
+            'currentWeixin' => $currentWeixin,'weixins' => $weixins,
         ]
     )
 );
@@ -102,10 +102,10 @@ echo $view['assets']->includeStylesheet('plugins/WeixinBundle/Assets/css/menu.cs
 
                             <?php if ($form->vars['value'] instanceof \MauticPlugin\WeixinBundle\Entity\MenuItem  || count($form->vars['value']->getItems()) == 0): ?>
                                 <?php echo $view['form']->row($form['type']); ?>
-                                <div class="url <?php if ($form->vars['value']->getType() == 'message') echo 'hidden'; ?>">
+                                <div class="url <?php if ($form->vars['value']->getType() == 'click') echo 'hidden'; ?>">
                                     <?php echo $view['form']->row($form['url']); ?>
                                 </div>
-                                <div class="message <?php if ($form->vars['value']->getType() == 'url') echo 'hidden'; ?>">
+                                <div class="message <?php if ($form->vars['value']->getType() == 'view') echo 'hidden'; ?>">
                                     <?php echo $view['form']->row($form['message']); ?>
                                 </div>
                             <?php endif; ?>
@@ -137,10 +137,10 @@ echo $view['assets']->includeStylesheet('plugins/WeixinBundle/Assets/css/menu.cs
         }).trigger('change');
 
         mQuery('input[type=radio][name="weixin_menu[type]"],input[type=radio][name="weixin_menu_item[type]"]').on('change', function () {
-            if (mQuery(this).val() == 'url') {
+            if (mQuery(this).val() == 'view') {
                 mQuery('.url').removeClass('hidden');
                 mQuery('.message').addClass('hidden');
-            } else if (mQuery(this).val() == 'message') {
+            } else if (mQuery(this).val() == 'click') {
                 mQuery('.url').addClass('hidden');
                 mQuery('.message').removeClass('hidden');
             }

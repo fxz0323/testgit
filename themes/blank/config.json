@@ -1,7 +1,7 @@
 {
   "name": "Blank",
-  "author": "Mautic team",
-  "authorUrl": "https://mautic.org",
+  "author": "Linkall 团队",
+  "authorUrl": "http://m-demo.linkall.sh.cn",
   "features": [
     "page",
     "email",
